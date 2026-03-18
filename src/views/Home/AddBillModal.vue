@@ -71,7 +71,7 @@
         <view class="section-box">
           <view class="section-header-inline">
             <text class="section-label">选择分类</text>
-            <text class="manage-btn" @click="$emit('manage-cat')">⚙️</text>
+            <text class="manage-btn" @click="$emit('manage-cat')">📂+</text>
           </view>
           <scroll-view scroll-x class="scroll-x">
             <view class="flex-row">

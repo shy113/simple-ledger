@@ -2,7 +2,11 @@
  * 蜉蝣简账 - 全局主题配置系统
  */
 
-export type ThemeId = "fresh-green" | "macaron-blue" | "warm-peach";
+export type ThemeId =
+  | "fresh-green"
+  | "macaron-blue"
+  | "warm-peach"
+  | "dreamy-purple";
 
 export type ThemeVars = Record<string, string>;
 
@@ -75,43 +79,54 @@ const makeTheme = (
  * 主题选项定义
  */
 export const themeOptions: AppTheme[] = [
-  // 1. 清新绿主题 - 森林氧气感
+  // 1. 🍵 抹茶森林 (比之前的清新绿更深邃、更有高级感)
   makeTheme(
     "fresh-green",
-    "清新绿",
-    "#32C26B", // 主色
-    "#269A54", // 深色态
-    "#F0FDF4", // 浅绿底（解决了之前绿底太重的问题）
-    "#DCF2E3", // 绿调边框（不脏，很清透）
-    "rgba(50, 194, 107, 0.12)", // 绿色投影
-    "linear-gradient(180deg, #8CE6A7 0%, #32C26B 100%)",
+    "抹茶森林",
+    "#41B883", // 更有质感的翡翠绿
+    "#34495E", // 深色态改用深蓝灰，增加高级感
+    "#F4F9F6", // 极淡的青磁底
+    "#E1EBE5", // 边框
+    "rgba(65, 184, 131, 0.15)",
+    "linear-gradient(180deg, #6ED6A7 0%, #41B883 100%)",
   ),
 
-  // 2. 马卡龙蓝主题 - 纯净天空感
+  // 2. 🌊 迷雾之海 (把纯蓝改成带点青色的蓝，更通透)
   makeTheme(
     "macaron-blue",
-    "马卡龙蓝",
-    "#74B9FF", // 主色
-    "#4C95E8", // 深色态
-    "#F0F7FF", // 纯净蓝底
-    "#D6E9FF", // 蓝调边框
-    "rgba(116, 185, 255, 0.15)", // 蓝色投影（会有淡淡的发光感）
-    "linear-gradient(180deg, #A8D5FF 0%, #74B9FF 100%)",
+    "迷雾之海",
+    "#54a0ff", // 更明亮的湖蓝色
+    "#2e86de", // 深蓝色
+    "#F2F8FF", // 冰晶蓝底
+    "#D9E8F5", // 边框
+    "rgba(84, 160, 255, 0.18)",
+    "linear-gradient(180deg, #82ccdd 0%, #54a0ff 100%)",
   ),
 
-  // 3. 暖桃橙主题 - 治愈夕阳感
+  // 3. 🍑 落日晚霞 (把橙色往粉色调一点，更有治愈感)
   makeTheme(
     "warm-peach",
-    "暖桃橙",
-    "#FFB86B", // 主色
-    "#F28B3C", // 深色态
-    "#FFF7ED", // 暖橙底
-    "#FFEDD5", // 橙调边框
-    "rgba(255, 184, 107, 0.15)", // 橙色投影
-    "linear-gradient(180deg, #FFD1A1 0%, #FFB86B 100%)",
+    "落日晚霞",
+    "#FF7675", // 珊瑚粉，比橙色更显精致
+    "#D63031", // 深色态
+    "#FFF9F9", // 极淡的樱花底
+    "#F5E4E4", // 边框
+    "rgba(255, 118, 117, 0.16)",
+    "linear-gradient(180deg, #FAB1A0 0%, #FF7675 100%)",
+  ),
+
+  // 4. 🔮 薰衣草田 (新增：2024年最流行的丁香紫色调)
+  makeTheme(
+    "dreamy-purple",
+    "薰衣草田",
+    "#a29bfe", // 丁香紫
+    "#6c5ce7", // 深紫色
+    "#F8F7FF", // 极淡的紫底
+    "#EBE9F5", // 边框
+    "rgba(162, 155, 254, 0.18)",
+    "linear-gradient(180deg, #D6D2FF 0%, #a29bfe 100%)",
   ),
 ];
-
 /**
  * 导出默认主题与工具函数
  */

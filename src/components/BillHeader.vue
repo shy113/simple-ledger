@@ -61,7 +61,7 @@ defineEmits<{
 
 .balance-amount {
   font-size: 70rpx;
-  font-weight: 650;
+  font-weight: bold;
   letter-spacing: 0.01em;
   color: var(--theme-text);
   margin-bottom: 22rpx;

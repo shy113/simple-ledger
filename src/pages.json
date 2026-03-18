@@ -3,7 +3,7 @@
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "账单小管家"
+        "navigationBarTitleText": "蜉蝣简账"
       }
     },
     {
@@ -15,7 +15,7 @@
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "账单小管家",
+    "navigationBarTitleText": "蜉蝣简账",
     "navigationBarBackgroundColor": "#F8F8F8",
     "backgroundColor": "#F8F8F8"
   }

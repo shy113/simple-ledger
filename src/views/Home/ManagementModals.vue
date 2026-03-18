@@ -1,10 +1,9 @@
-<template>
-  <!-- 分类管理 -->
+﻿<template>
   <view v-if="showCat" class="modal-mask" @click="$emit('update:showCat', false)">
     <view class="modal-content" @click.stop>
       <view class="modal-header">
         <text class="modal-title">管理分类</text>
-        <text class="close-btn" @click="$emit('update:showCat', false)">✕</text>
+        <text class="close-btn" @click="$emit('update:showCat', false)">×</text>
       </view>
       <view class="cat-list-scroll">
         <view v-for="(cat, idx) in categories[type]" :key="idx" class="cat-manage-item">
@@ -20,12 +19,11 @@
     </view>
   </view>
 
-  <!-- 人物管理 -->
   <view v-if="showPerson" class="modal-mask" @click="$emit('update:showPerson', false)">
     <view class="modal-content" @click.stop>
       <view class="modal-header">
         <text class="modal-title">管理人物</text>
-        <text class="close-btn" @click="$emit('update:showPerson', false)">✕</text>
+        <text class="close-btn" @click="$emit('update:showPerson', false)">×</text>
       </view>
       <view class="cat-list-scroll">
         <view v-for="(p, idx) in persons" :key="idx" class="cat-manage-item">
@@ -46,28 +44,29 @@
 import { ref } from 'vue';
 import { useBills } from '../../composables/useBills';
 
-defineProps<{ 
-  showCat: boolean; 
+const props = defineProps<{
+  showCat: boolean;
   showPerson: boolean;
   type: 'expense' | 'income';
 }>();
+
 defineEmits(['update:showCat', 'update:showPerson']);
 
 const { categories, persons, addCategory, removeCategory, addPerson, removePerson } = useBills();
 
-const newCat = ref({ name: '', icon: '🏷️' });
-const newPerson = ref({ name: '', avatar: '👶' });
+const newCat = ref({ name: '', icon: '🧩' });
+const newPerson = ref({ name: '', avatar: '👤' });
 
 const handleAddCat = () => {
   if (!newCat.value.name) return;
   addCategory(props.type, { ...newCat.value });
-  newCat.value = { name: '', icon: '🏷️' };
+  newCat.value = { name: '', icon: '🧩' };
 };
 
 const handleAddPerson = () => {
   if (!newPerson.value.name) return;
   addPerson({ ...newPerson.value });
-  newPerson.value = { name: '', avatar: '👶' };
+  newPerson.value = { name: '', avatar: '👤' };
 };
 </script>
 

@@ -1,96 +1,96 @@
-import { ref, computed } from "vue";
-import type { Bill, Category, Person } from "../types";
+﻿import { ref, computed } from 'vue';
+import { getTodayDateString } from '../utils/dateHelper';
+import type { Bill, Category, Person } from '../types';
 
-// 全局单例状态
 const bills = ref<Bill[]>([]);
-const categories = ref<Record<"expense" | "income", Category[]>>({
+const categories = ref<Record<'expense' | 'income', Category[]>>({
   expense: [
-    { name: "餐饮", icon: "🍔" },
-    { name: "交通", icon: "🚗" },
-    { name: "购物", icon: "🛍️" },
-    { name: "娱乐", icon: "🎮" },
-    { name: "其它", icon: "📦" },
+    { name: '餐饮', icon: '🍝' },
+    { name: '交通', icon: '🚇' },
+    { name: '购物', icon: '🛍️' },
+    { name: '娱乐', icon: '🎮' },
+    { name: '其他', icon: '🧾' },
   ],
   income: [
-    { name: "工资", icon: "💰" },
-    { name: "兼职", icon: "🍳" },
-    { name: "其它", icon: "🧧" },
+    { name: '工资', icon: '💵' },
+    { name: '兼职', icon: '🛎️' },
+    { name: '其他', icon: '✨' },
   ],
 });
 const persons = ref<Person[]>([
-  { name: "本人", avatar: "👨‍💼" },
-  { name: "家人", avatar: "👩‍👧‍👦" },
-  { name: "朋友", avatar: "🤝" },
+  { name: '本人', avatar: '🧑' },
+  { name: '家人', avatar: '👨‍👩‍👧‍👦' },
+  { name: '朋友', avatar: '🤝' },
 ]);
 
-/**
- * 极简记账核心逻辑处理
- */
+function pad(num: number): string {
+  return String(num).padStart(2, '0');
+}
+
 export function useBills() {
   const totalExpense = computed(() =>
     bills.value
-      .filter((b) => b.type === "expense")
-      .reduce((sum, b) => sum + b.amount, 0),
+      .filter((bill) => bill.type === 'expense')
+      .reduce((sum, bill) => sum + bill.amount, 0),
   );
   const totalIncome = computed(() =>
     bills.value
-      .filter((b) => b.type === "income")
-      .reduce((sum, b) => sum + b.amount, 0),
+      .filter((bill) => bill.type === 'income')
+      .reduce((sum, bill) => sum + bill.amount, 0),
   );
   const balance = computed(() => totalIncome.value - totalExpense.value);
-  const sortedBills = computed(() =>
-    [...bills.value].sort((a, b) => b.id - a.id),
-  );
+  const sortedBills = computed(() => [...bills.value].sort((a, b) => b.id - a.id));
 
-  const initData = () => {
-    const b = uni.getStorageSync("my_bills");
-    if (b) bills.value = JSON.parse(b);
-    else inject50MockData(); // 🚀 如果没有数据，注入50条精美数据
-
-    const c = uni.getStorageSync("my_categories");
-    if (c) categories.value = JSON.parse(c);
-    const p = uni.getStorageSync("my_persons");
-    if (p) persons.value = JSON.parse(p);
+  const sync = () => {
+    uni.setStorageSync('my_bills', JSON.stringify(bills.value));
+    uni.setStorageSync('my_categories', JSON.stringify(categories.value));
+    uni.setStorageSync('my_persons', JSON.stringify(persons.value));
   };
 
-  // 🚀 自动化数据生成器
   const inject50MockData = () => {
     const newMockBills: Bill[] = [];
     const expCats = categories.value.expense;
     const incCats = categories.value.income;
     const ps = persons.value;
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const maxDay = Math.max(1, Math.min(now.getDate(), new Date(year, month + 1, 0).getDate()));
 
     for (let i = 1; i <= 50; i++) {
-      const isIncome = Math.random() > 0.85; // 15% 几率是收入
+      const isIncome = Math.random() > 0.85;
       const catList = isIncome ? incCats : expCats;
       const cat = catList[Math.floor(Math.random() * catList.length)];
       const person = ps[Math.floor(Math.random() * ps.length)];
-
-      // 生成随机日期 (2026-03-01 到 2026-03-18)
-      const day = Math.floor(Math.random() * 18) + 1;
-      const date = `2026-03-${String(day).padStart(2, "0")}`;
+      const day = Math.floor(Math.random() * maxDay) + 1;
+      const date = `${year}-${pad(month + 1)}-${pad(day)}`;
 
       newMockBills.push({
         id: i,
-        amount: isIncome
-          ? Math.random() * 5000 + 500
-          : Math.random() * 200 + 10,
-        type: isIncome ? "income" : "expense",
+        amount: isIncome ? Math.random() * 5000 + 500 : Math.random() * 200 + 10,
+        type: isIncome ? 'income' : 'expense',
         category: cat.name,
         personName: person.name,
         personAvatar: person.avatar,
-        date: date,
+        date,
         note: `模拟记录 #${i}`,
       });
     }
+
     bills.value = newMockBills;
     sync();
   };
 
-  const sync = () => {
-    uni.setStorageSync("my_bills", JSON.stringify(bills.value));
-    uni.setStorageSync("my_categories", JSON.stringify(categories.value));
-    uni.setStorageSync("my_persons", JSON.stringify(persons.value));
+  const initData = () => {
+    const b = uni.getStorageSync('my_bills');
+    if (b) bills.value = JSON.parse(b);
+    else inject50MockData();
+
+    const c = uni.getStorageSync('my_categories');
+    if (c) categories.value = JSON.parse(c);
+
+    const p = uni.getStorageSync('my_persons');
+    if (p) persons.value = JSON.parse(p);
   };
 
   return {
@@ -104,12 +104,11 @@ export function useBills() {
     initData,
     sync,
     inject50MockData,
-    addBill: (b: Omit<Bill, "id">) => {
-      const today = new Date().toLocaleDateString("zh-CN");
+    addBill: (bill: Omit<Bill, 'id'>) => {
       bills.value.push({
-        ...b,
+        ...bill,
         id: Date.now(),
-        date: b.date || today,
+        date: bill.date || getTodayDateString(),
       });
       sync();
     },
@@ -124,11 +123,11 @@ export function useBills() {
       bills.value = bills.value.filter((item) => item.id !== id);
       sync();
     },
-    addCategory: (type: "expense" | "income", cat: Category) => {
+    addCategory: (type: 'expense' | 'income', cat: Category) => {
       categories.value[type].push(cat);
       sync();
     },
-    removeCategory: (type: "expense" | "income", index: number) => {
+    removeCategory: (type: 'expense' | 'income', index: number) => {
       categories.value[type].splice(index, 1);
       sync();
     },

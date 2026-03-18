@@ -1,55 +1,158 @@
+﻿import { ref, computed, onMounted } from 'vue';
+import { useBills } from '../../composables/useBills';
+import type { Bill } from '../../types';
+import { formatMonthLabel, getCurrentMonthKey, getMonthKeyFromDate } from '../../utils/dateHelper';
+
+import BillHeader from '../../components/BillHeader.vue';
+import BillList from '../../views/Home/BillList.vue';
+import StatsView from '../../views/Home/StatsView.vue';
+import AddBillModal from '../../views/Home/AddBillModal.vue';
+import ManagementModals from '../../views/Home/ManagementModals.vue';
+
+const { bills, initData, inject50MockData } = useBills();
+
+const activeTab = ref<'list' | 'stats'>('list');
+const selectedMonth = ref(getCurrentMonthKey());
+const selectedType = ref<'expense' | 'income' | 'all'>('expense');
+const showAddModal = ref(false);
+const showCatManager = ref(false);
+const showPersonManager = ref(false);
+const scrollTop = ref(0);
+const editingBill = ref<Bill | null>(null);
+
+onMounted(() => {
+  initData();
+});
+
+const selectedMonthLabel = computed(() => formatMonthLabel(selectedMonth.value));
+const selectedMonthPickerValue = computed(() => `${selectedMonth.value}-01`);
+
+const monthBills = computed(() =>
+  bills.value.filter((bill) => getMonthKeyFromDate(String(bill.date)) === selectedMonth.value),
+);
+
+const periodIncome = computed(() =>
+  monthBills.value
+    .filter((bill) => bill.type === 'income')
+    .reduce((sum, bill) => sum + bill.amount, 0),
+);
+
+const periodExpense = computed(() =>
+  monthBills.value
+    .filter((bill) => bill.type === 'expense')
+    .reduce((sum, bill) => sum + bill.amount, 0),
+);
+
+const periodBalance = computed(() => periodIncome.value - periodExpense.value);
+
+const displayedBills = computed(() => {
+  if (selectedType.value === 'all') {
+    return monthBills.value;
+  }
+  return monthBills.value.filter((bill) => bill.type === selectedType.value);
+});
+
+const handleAddNew = () => {
+  editingBill.value = null;
+  showAddModal.value = true;
+};
+
+const handleEdit = (bill: Bill) => {
+  editingBill.value = bill;
+  showAddModal.value = true;
+};
+
+const handleRegenerateMock = () => {
+  inject50MockData();
+  scrollTop.value = scrollTop.value === 0 ? 0.1 : 0;
+  uni.showToast({ title: '已重新生成50条测试数据', icon: 'none' });
+};
+
+const handleMonthChange = (event: any) => {
+  const value = event?.detail?.value || '';
+  if (value) {
+    selectedMonth.value = String(value).slice(0, 7);
+  }
+};
+</script>
+
 <template>
   <view class="container">
-    <!-- 固定的头部区域 -->
     <view class="fixed-header">
-      <!-- 头部总览卡片 -->
       <BillHeader
-        :balance="balance"
-        :income="totalIncome"
-        :expense="totalExpense"
+        title="当前月份"
+        :period-label="selectedMonthLabel"
+        :balance="periodBalance"
+        :income="periodIncome"
+        :expense="periodExpense"
       />
 
-      <!-- 视图切换开关 -->
+      <view class="filter-card">
+        <view class="filter-row">
+          <text class="filter-label">月份</text>
+          <picker mode="date" fields="month" :value="selectedMonthPickerValue" @change="handleMonthChange">
+            <view class="period-picker">{{ selectedMonthLabel }}</view>
+          </picker>
+        </view>
+
+        <view class="type-switcher">
+          <view
+            :class="['type-item', selectedType === 'expense' ? 'active' : '']"
+            @click="selectedType = 'expense'"
+          >
+            支出
+          </view>
+          <view
+            :class="['type-item', selectedType === 'income' ? 'active' : '']"
+            @click="selectedType = 'income'"
+          >
+            收入
+          </view>
+          <view
+            :class="['type-item', selectedType === 'all' ? 'active' : '']"
+            @click="selectedType = 'all'"
+          >
+            全部
+          </view>
+        </view>
+      </view>
+
       <view class="view-switcher">
         <view
           :class="['switch-item', activeTab === 'list' ? 'active' : '']"
           @click="activeTab = 'list'"
-          >明细</view
         >
+          明细
+        </view>
         <view
           :class="['switch-item', activeTab === 'stats' ? 'active' : '']"
           @click="activeTab = 'stats'"
-          >分析</view
         >
+          分析
+        </view>
       </view>
     </view>
 
-    <!-- 可滚动的业务内容区域 -->
     <scroll-view
       class="scroll-content"
       scroll-y
       :scroll-top="scrollTop"
       :scroll-with-animation="false"
     >
-      <!-- 明细视图 -->
       <view v-show="activeTab === 'list'">
-        <BillList @edit="handleEdit" />
-        <!-- 刷新数据入口 -->
+        <BillList :bills="displayedBills" @edit="handleEdit" />
         <view class="refresh-entry" @click="handleRegenerateMock">
-          <text>🔄 刷新测试数据</text>
+          <text>刷新测试数据</text>
         </view>
       </view>
 
-      <!-- 分析视图 -->
       <view v-show="activeTab === 'stats'">
-        <StatsView />
+        <StatsView :bills="monthBills" :period-label="selectedMonthLabel" />
       </view>
     </scroll-view>
 
-    <!-- 悬浮添加按钮 (清空编辑状态) -->
     <view class="add-fab" @click="handleAddNew">+</view>
 
-    <!-- 记账弹窗组件 -->
     <AddBillModal
       v-model="showAddModal"
       :editData="editingBill"
@@ -57,7 +160,6 @@
       @manage-person="showPersonManager = true"
     />
 
-    <!-- 管理弹窗组件 -->
     <ManagementModals
       v-model:showCat="showCatManager"
       v-model:showPerson="showPersonManager"
@@ -66,58 +168,11 @@
   </view>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useBills } from "../../composables/useBills";
-import type { Bill } from "../../types";
-
-// 导入业务视图组件
-import BillHeader from "../../components/BillHeader.vue";
-import BillList from "../../views/Home/BillList.vue";
-import StatsView from "../../views/Home/StatsView.vue";
-import AddBillModal from "../../views/Home/AddBillModal.vue";
-import ManagementModals from "../../views/Home/ManagementModals.vue";
-
-const { balance, totalIncome, totalExpense, initData, inject50MockData } =
-  useBills();
-
-const activeTab = ref("list");
-const showAddModal = ref(false);
-const showCatManager = ref(false);
-const showPersonManager = ref(false);
-const scrollTop = ref(0);
-
-const editingBill = ref<Bill | null>(null); // 当前正在编辑的账单记录
-
-onMounted(() => {
-  initData();
-});
-
-// 处理点击"+"号：进入新增模式
-const handleAddNew = () => {
-  editingBill.value = null; // 确保是新增
-  showAddModal.value = true;
-};
-
-// 处理点击列表项：进入编辑模式
-const handleEdit = (bill: Bill) => {
-  editingBill.value = bill;
-  showAddModal.value = true;
-};
-
-// 重新生成50条mock数据
-const handleRegenerateMock = () => {
-  inject50MockData();
-  // 滚动到顶部
-  scrollTop.value = scrollTop.value === 0 ? 0.1 : 0;
-  uni.showToast({ title: "已重新生成50条数据", icon: "none" });
-};
-</script>
-
 <style>
 page {
   height: 100%;
 }
+
 .container {
   display: flex;
   flex-direction: column;
@@ -130,6 +185,58 @@ page {
   padding: 30rpx;
   padding-bottom: 0;
   background-color: #f8f9fb;
+}
+
+.filter-card {
+  background: #fff;
+  border-radius: 32rpx;
+  padding: 24rpx 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.04);
+}
+
+.filter-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18rpx;
+}
+
+.filter-label {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.period-picker {
+  min-width: 180rpx;
+  text-align: center;
+  padding: 12rpx 20rpx;
+  border-radius: 999rpx;
+  background: #f5f6f8;
+  color: #111;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.type-switcher {
+  display: flex;
+  gap: 12rpx;
+}
+
+.type-item {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  font-size: 24rpx;
+  color: #666;
+  border-radius: 999rpx;
+  background: #f5f6f8;
+}
+
+.type-item.active {
+  background: #111;
+  color: #fff;
+  font-weight: 600;
 }
 
 .scroll-content {
@@ -146,10 +253,10 @@ page {
   background: #eee;
   border-radius: 40rpx;
   padding: 6rpx;
-  margin-top: 40rpx;
   margin-bottom: 30rpx;
   width: 300rpx;
 }
+
 .switch-item {
   flex: 1;
   text-align: center;
@@ -159,12 +266,14 @@ page {
   border-radius: 35rpx;
   transition: all 0.3s;
 }
+
 .switch-item.active {
   background: white;
   color: #000;
   font-weight: 700;
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05);
 }
+
 .add-fab {
   position: fixed;
   right: 50rpx;
@@ -181,11 +290,13 @@ page {
   box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.3);
   z-index: 100;
 }
+
 .refresh-entry {
   text-align: center;
   padding: 30rpx;
   margin-top: 20rpx;
 }
+
 .refresh-entry text {
   font-size: 24rpx;
   color: #999;

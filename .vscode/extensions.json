@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "vue.volar",
+    "vuejs.vscode-typescript-vue-plugin",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "uni-app.uni-app-snippet",
+    "uni-app.vue3-snippets"
+  ]
+}

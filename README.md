@@ -1,131 +1,22 @@
-# 微信小程序 / uni-app 项目
+# 极简记账 (Simpli-Bill)
 
-基于 uni-app 开发的多端小程序项目，一套代码同时支持微信、支付宝等多个平台。
+一个专为追求效率和审美的用户设计的记账小程序。
+
+## 项目愿景
+- **极致简约**：没有多余的功能，只有纯粹的记账。
+- **视觉至上**：采用现代化的卡片式设计，提供舒适的视觉体验。
+- **本地优先**：数据存储在本地，隐私安全，响应极快。
+
+## 功能模块
+- [x] **资产总览**：实时统计总收入、总支出及结余。
+- [x] **极速记账**：点击加号，秒级完成一笔记录。
+- [x] **分类管理**：预设常用生活分类（餐饮、交通、购物、娱乐等）。
+- [x] **历史列表**：按时间顺序展示账单明细。
 
 ## 技术栈
+- **前端**：uni-app (Vue 3 + TypeScript)
+- **存储**：微信本地缓存 (Storage)
+- **未来规划**：Python FastAPI + SQLite 后端同步
 
-- **框架**: uni-app (Vue 3 + TypeScript)
-- **构建工具**: Vite
-- **UI**: uView Plus / uni-ui
-
-## 功能特性
-
-- [ ] 页面结构
-- [ ] API 封装
-- [ ] 状态管理
-- [ ] 权限控制
-
-## 快速开始
-
-### 安装依赖
-
-```bash
-npm install
-```
-
-### 开发
-
-```bash
-# 微信小程序
-npm run dev:mp-weixin
-
-# 支付宝小程序
-npm run dev:mp-alipay
-
-# H5
-npm run dev:h5
-
-# App
-npm run dev:app
-```
-
-### 构建
-
-```bash
-# 微信小程序
-npm run build:mp-weixin
-
-# 支付宝小程序
-npm run build:mp-alipay
-
-# H5
-npm run build:h5
-```
-
-## 项目结构
-
-```
-├── src/
-│   ├── pages/           # 页面
-│   │   └── index/       # 首页
-│   ├── components/      # 组件
-│   ├── composables/     # 组合式 API
-│   ├── utils/           # 工具函数
-│   ├── api/             # API 接口
-│   ├── store/           # 状态管理
-│   ├── static/          # 静态资源
-│   ├── App.vue          # 根组件
-│   ├── main.ts          # 入口文件
-│   ├── manifest.json    # 应用配置
-│   └── pages.json       # 页面配置
-├── index.html           # H5 入口
-├── vite.config.ts       # Vite 配置
-└── package.json
-```
-
-## 配置
-
-### 微信小程序 AppID
-
-在 `src/manifest.json` 中配置：
-
-```json
-{
-  "mp-weixin": {
-    "appid": "你的AppID"
-  }
-}
-```
-
-### 支付宝小程序 AppID
-
-在 `src/manifest.json` 中配置：
-
-```json
-{
-  "mp-alipay": {
-    "appid": "你的AppID"
-  }
-}
-```
-
-## 开发规范
-
-- 使用 TypeScript
-- 使用 ESLint + Prettier
-- 遵循 Vue 3 Composition API 风格
-- 组件命名使用 PascalCase
-
-## VS Code 插件
-
-打开项目后，VS Code 会提示安装以下插件：
-
-- `uni-app-snippet` - uni-app 代码片段
-- `vue.volar` - Vue 3 语言支持
-- `uni-app.vue3-snippets` - Vue3 代码片段
-
-## 注意事项
-
-1. 所有页面必须在 `src/pages.json` 中注册
-2. 图片资源放在 `src/static/` 目录
-3. 使用 `uni.` API 进行平台兼容开发
-
-## 相关文档
-
-- [uni-app 官方文档](https://uniapp.dcloud.net.cn/)
-- [微信小程序文档](https://developers.weixin.qq.com/miniprogram/dev/)
-- [支付宝小程序文档](https://opendocs.alipay.com/mini/developer)
-
-## 许可证
-
-MIT
+## 负责人
+- guzhaoheng

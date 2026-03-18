@@ -289,28 +289,30 @@ const handleSave = () => {
 .type-tab {
   display: flex;
   background: var(--theme-surface);
-  border-radius: 20rpx;
+  border: 1rpx solid var(--theme-border);
+  border-radius: 24rpx;
   padding: 8rpx;
   margin-bottom: 30rpx;
 }
 .tab-item {
   flex: 1;
   text-align: center;
-  padding: 15rpx 0;
+  padding: 16rpx 0;
   font-size: 30rpx;
   font-weight: 600;
-  border-radius: 15rpx;
+  border-radius: 18rpx;
   color: var(--theme-text-muted);
+  transition: all 0.2s;
 }
 .active-expense {
   background: var(--theme-expense);
   color: white;
-  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(255, 90, 90, 0.2);
 }
 .active-income {
   background: var(--theme-income);
   color: white;
-  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(42, 191, 150, 0.2);
 }
 .amount-input-box {
   display: flex;

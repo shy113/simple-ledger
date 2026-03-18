@@ -434,18 +434,20 @@ page {
 .type-item {
   flex: 1;
   text-align: center;
-  padding: 14rpx 0;
-  font-size: 24rpx;
+  padding: 16rpx 0;
+  font-size: 26rpx;
   color: var(--theme-text-muted);
   border-radius: 999rpx;
   background: var(--theme-surface);
   border: 1rpx solid var(--theme-border);
+  transition: all 0.24s ease;
 }
 
 .type-item.active {
-  color: var(--theme-text);
+  color: var(--theme-primary);
+  font-weight: 700;
   background: var(--theme-surface-strong);
-  border-color: rgba(52, 194, 107, 0.18);
+  border-color: var(--theme-primary);
   box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08);
 }
 

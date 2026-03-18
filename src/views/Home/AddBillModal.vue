@@ -14,14 +14,11 @@
 
         <view class="amount-input-box">
           <text class="currency-symbol">¥</text>
-          <input
-            class="amount-input"
-            type="digit"
-            v-model="form.amount"
-            placeholder="0.00"
-            confirm-type="done"
-            :adjust-position="false"
-          />
+          <input class="amount-input" type="digit" v-model="form.amount" placeholder="0.00" confirm-type="done" :adjust-position="false" />
+        </view>
+
+        <view class="note-box">
+          <input v-model="form.note" class="note-input" placeholder="备注（可选）" confirm-type="done" :adjust-position="false" />
         </view>
 
         <view class="section-box">
@@ -30,13 +27,7 @@
             <text class="manage-btn" @click="formatDate">格式化</text>
           </view>
           <view class="date-input-box">
-            <input
-              class="date-input"
-              v-model="form.date"
-              placeholder="输入如 0318"
-              confirm-type="done"
-              :adjust-position="false"
-            />
+            <input class="date-input" v-model="form.date" placeholder="输入如 0318" confirm-type="done" :adjust-position="false" />
             <text class="today-tag" @click="setToday">今天</text>
           </view>
         </view>
@@ -79,14 +70,7 @@
           </scroll-view>
         </view>
 
-        <view class="note-box">
-          <input
-            v-model="form.note"
-            placeholder="备注（可选）"
-            confirm-type="done"
-            :adjust-position="false"
-          />
-        </view>
+        <view class="bottom-spacer"></view>
       </scroll-view>
 
       <view class="modal-footer">
@@ -102,10 +86,7 @@ import { useBills } from '../../composables/useBills';
 import { smartParseDate } from '../../utils/dateHelper';
 import type { Bill } from '../../types';
 
-const props = defineProps<{
-  modelValue: boolean;
-  editData?: Bill | null;
-}>();
+const props = defineProps<{ modelValue: boolean; editData?: Bill | null }>();
 const emit = defineEmits(['update:modelValue', 'manage-cat', 'manage-person']);
 
 const { categories, persons, addBill, updateBill } = useBills();
@@ -192,11 +173,8 @@ const handleSave = () => {
 <style scoped>
 .modal-mask {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: rgba(47, 53, 66, 0.52);
   z-index: 200;
   display: flex;
   flex-direction: column;
@@ -204,7 +182,7 @@ const handleSave = () => {
 }
 
 .modal-content {
-  background: white;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 249, 244, 0.98) 100%);
   border-radius: 50rpx 50rpx 0 0;
   padding: 40rpx 40rpx 24rpx;
   animation: slideUp 0.3s;
@@ -213,184 +191,37 @@ const handleSave = () => {
   flex-direction: column;
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.modal-title {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #111;
-}
-
-.close-btn {
-  font-size: 36rpx;
-  color: #CCC;
-  padding: 10rpx;
-}
-
-.modal-scroll-area {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 24rpx;
-}
-
-.date-input-box {
-  display: flex;
-  align-items: center;
-  background: #F8F9FB;
-  border-radius: 20rpx;
-  padding: 20rpx;
-  gap: 20rpx;
-}
-
-.date-input {
-  flex: 1;
-  font-size: 28rpx;
-  color: #333;
-}
-
-.today-tag {
-  font-size: 24rpx;
-  color: #999;
-}
-
-.type-tab {
-  display: flex;
-  background: #F5F5F5;
-  border-radius: 20rpx;
-  padding: 8rpx;
-  margin-bottom: 30rpx;
-}
-
-.tab-item {
-  flex: 1;
-  text-align: center;
-  padding: 15rpx 0;
-  font-size: 28rpx;
-  border-radius: 15rpx;
-}
-
-.active-expense {
-  background: #FF7F50;
-  color: white;
-  font-weight: 600;
-}
-
-.active-income {
-  background: #2ECC71;
-  color: white;
-  font-weight: 600;
-}
-
-.amount-input-box {
-  display: flex;
-  align-items: baseline;
-  border-bottom: 2rpx solid #EEE;
-  padding: 10rpx 0;
-  margin-bottom: 30rpx;
-}
-
-.currency-symbol {
-  font-size: 40rpx;
-  margin-right: 10rpx;
-}
-
-.amount-input {
-  font-size: 70rpx;
-  height: 100rpx;
-  font-weight: 700;
-}
-
-.section-box {
-  margin-bottom: 30rpx;
-}
-
-.section-label {
-  font-size: 24rpx;
-  color: #999;
-  margin-bottom: 10rpx;
-  display: block;
-}
-
-.section-header-inline {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10rpx;
-}
-
-.manage-btn {
-  font-size: 24rpx;
-  color: #007AFF;
-}
-
-.scroll-x {
-  width: 100%;
-  white-space: nowrap;
-}
-
-.flex-row {
-  display: inline-flex;
-  gap: 15rpx;
-}
-
-.chip-item {
-  padding: 15rpx 25rpx;
-  border-radius: 20rpx;
-  background: #F8F9FB;
-  border: 2rpx solid #F5F5F5;
-  font-size: 26rpx;
-  color: #666;
-}
-
-.chip-item.selected {
-  background: #FFF4F0;
-  border-color: #FF7F50;
-  color: #FF7F50;
-  font-weight: 600;
-}
-
-.chip-item.selected-person {
-  background: #F0F7FF;
-  border-color: #007AFF;
-  color: #007AFF;
-  font-weight: 600;
-}
-
-.note-box {
-  background: #F8F9FB;
-  padding: 20rpx;
-  border-radius: 20rpx;
-  margin-bottom: 10rpx;
-}
-
-.modal-footer {
-  padding-top: 14rpx;
-  border-top: 1rpx solid #f2f2f2;
-}
-
-.save-btn {
-  height: 88rpx;
-  line-height: 88rpx;
-  border-radius: 24rpx;
-  background: linear-gradient(135deg, #1f2937 0%, #0f172a 100%);
-  color: white;
-  font-size: 30rpx;
-  font-weight: 700;
-  box-shadow: 0 12rpx 24rpx rgba(15, 23, 42, 0.16);
-}
-
-.save-btn:active {
-  transform: scale(0.99);
-  opacity: 0.92;
-}
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20rpx; }
+.modal-title { font-size: 38rpx; font-weight: 700; color: var(--theme-text); }
+.close-btn { font-size: 38rpx; color: var(--theme-text-muted); padding: 10rpx; }
+.modal-scroll-area { flex: 1; overflow-y: auto; margin-bottom: 24rpx; }
+.date-input-box { display: flex; align-items: center; background: rgba(242, 248, 243, 0.98); border-radius: 20rpx; padding: 20rpx; gap: 20rpx; }
+.date-input { flex: 1; font-size: 28rpx; color: var(--theme-text); }
+.today-tag { font-size: 28rpx; color: var(--theme-primary); }
+.type-tab { display: flex; background: rgba(236, 244, 238, 0.98); border-radius: 20rpx; padding: 8rpx; margin-bottom: 30rpx; }
+.tab-item { flex: 1; text-align: center; padding: 15rpx 0; font-size: 30rpx; font-weight: 600; border-radius: 15rpx; color: var(--theme-text-muted); }
+.active-expense { background: var(--theme-expense); color: white; font-weight: 600; }
+.active-income { background: var(--theme-income); color: white; font-weight: 600; }
+.amount-input-box { display: flex; align-items: baseline; border-bottom: 2rpx solid #EEE; padding: 10rpx 0; margin-bottom: 20rpx; }
+.currency-symbol { font-size: 44rpx; margin-right: 10rpx; color: var(--theme-text); }
+.amount-input { font-size: 74rpx; height: 100rpx; font-weight: 700; color: var(--theme-text); }
+.note-box { background: rgba(242, 248, 243, 0.98); padding: 18rpx 20rpx; border-radius: 20rpx; margin-bottom: 28rpx; }
+.note-input { font-size: 28rpx; color: var(--theme-text); }
+.section-box { margin-bottom: 30rpx; }
+.section-label { font-size: 28rpx; color: var(--theme-text-muted); margin-bottom: 10rpx; display: block; }
+.section-header-inline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10rpx; }
+.manage-btn { font-size: 28rpx; color: var(--theme-primary); }
+.scroll-x { width: 100%; white-space: nowrap; }
+.flex-row { display: inline-flex; gap: 15rpx; }
+.chip-item { padding: 15rpx 25rpx; border-radius: 20rpx; background: rgba(242, 248, 243, 0.98); border: 2rpx solid #F5F5F5; font-size: 28rpx; color: #4B5563; }
+.chip-item.selected { background: var(--theme-expense-soft); border-color: var(--theme-expense); color: var(--theme-expense); font-weight: 600; }
+.chip-item.selected-person { background: var(--theme-primary-soft); border-color: var(--theme-primary); color: var(--theme-primary); font-weight: 600; }
+.bottom-spacer { height: 180rpx; }
+.modal-footer { padding-top: 14rpx; border-top: 1rpx solid rgba(215, 232, 221, 0.95); }
+.save-btn { height: 88rpx; line-height: 88rpx; border-radius: 24rpx; background: var(--theme-fab-gradient); color: white; font-size: 32rpx; font-weight: 700; box-shadow: 0 12rpx 24rpx rgba(52, 101, 65, 0.18); }
+.save-btn:active { transform: scale(0.99); opacity: 0.92; }
 </style>
+
+

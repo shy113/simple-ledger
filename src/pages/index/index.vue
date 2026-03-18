@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useBills } from '../../composables/useBills';
+import { useTheme } from '../../composables/useTheme';
 import type { Bill } from '../../types';
 import { formatMonthLabel, getCurrentMonthKey, getMonthKeyFromDate } from '../../utils/dateHelper';
 
@@ -11,6 +12,7 @@ import AddBillModal from '../../views/Home/AddBillModal.vue';
 import ManagementModals from '../../views/Home/ManagementModals.vue';
 
 const { bills, initData } = useBills();
+const { themeVars } = useTheme();
 
 const activeTab = ref<'list' | 'stats'>('list');
 const selectedMonth = ref(getCurrentMonthKey());
@@ -84,7 +86,7 @@ const shiftMonth = (offset: number) => {
 </script>
 
 <template>
-  <view class="container">
+  <view class="container" :style="themeVars">
     <view class="ambient ambient-a"></view>
     <view class="ambient ambient-b"></view>
 
@@ -167,7 +169,7 @@ const shiftMonth = (offset: number) => {
 <style>
 page {
   height: 100%;
-  background: #f9fafc;
+  background: linear-gradient(180deg, #eef7f0 0%, #e7f2eb 100%);
 }
 
 .container {
@@ -176,8 +178,8 @@ page {
   flex-direction: column;
   height: 100%;
   background:
-    radial-gradient(circle at top left, rgba(255, 255, 255, 0.75) 0, rgba(255, 255, 255, 0) 38%),
-    linear-gradient(180deg, #f9fafc 0%, #f2f5f9 100%);
+    radial-gradient(circle at top left, var(--theme-accent-ambient) 0, rgba(255, 255, 255, 0) 42%),
+    linear-gradient(180deg, var(--theme-page-bg) 0%, var(--theme-page-bg-alt) 100%);
   overflow: hidden;
 }
 
@@ -194,7 +196,7 @@ page {
   height: 360rpx;
   right: -120rpx;
   top: -90rpx;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.40);
 }
 
 .ambient-b {
@@ -202,7 +204,7 @@ page {
   height: 420rpx;
   left: -180rpx;
   top: 460rpx;
-  background: rgba(116, 185, 255, 0.12);
+  background: rgba(52, 194, 107, 0.22);
 }
 
 .fixed-header {
@@ -215,8 +217,8 @@ page {
 
 .view-switcher {
   display: flex;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1rpx solid rgba(229, 234, 241, 0.95);
+  background: var(--theme-surface);
+  border: 1rpx solid var(--theme-border);
   border-radius: 999rpx;
   padding: 6rpx;
   margin-bottom: 18rpx;
@@ -230,14 +232,14 @@ page {
   text-align: center;
   padding: 12rpx 0;
   font-size: 26rpx;
-  color: #a4b0be;
+  color: var(--theme-text-muted);
   border-radius: 999rpx;
   transition: all 0.24s ease;
 }
 
 .switch-item.active {
-  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-  color: #2f3542;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  color: var(--theme-text);
   font-weight: 700;
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05);
 }
@@ -253,17 +255,17 @@ page {
   text-align: center;
   padding: 14rpx 0;
   font-size: 24rpx;
-  color: #a4b0be;
+  color: var(--theme-text-muted);
   border-radius: 999rpx;
-  background: rgba(255, 255, 255, 0.84);
-  border: 1rpx solid rgba(229, 234, 241, 0.95);
+  background: var(--theme-surface);
+  border: 1rpx solid var(--theme-border);
   box-shadow: 0 8rpx 18rpx rgba(47, 53, 66, 0.03);
   backdrop-filter: blur(18rpx);
 }
 
 .type-item.active {
-  background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
-  color: #2f3542;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  color: var(--theme-text);
   font-weight: 700;
 }
 
@@ -284,14 +286,14 @@ page {
   bottom: 60rpx;
   width: 110rpx;
   height: 110rpx;
-  background: linear-gradient(180deg, #8cc8ff 0%, #74b9ff 100%);
+  background: var(--theme-fab-gradient);
   color: white;
   border-radius: 55rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 60rpx;
-  box-shadow: 0 18rpx 34rpx rgba(116, 185, 255, 0.3);
+  box-shadow: 0 18rpx 34rpx rgba(50, 194, 107, 0.28);
   z-index: 100;
 }
 </style>

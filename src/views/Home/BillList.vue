@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <view class="list-section">
     <view class="list-toolbar">
       <view class="toolbar-labels">
@@ -6,8 +6,8 @@
         <text class="toolbar-hint">当前：{{ sortMode === 'date' ? '按日期' : '按金额' }}</text>
       </view>
       <view class="sort-toggle">
-        <view :class="['sort-pill', sortMode === 'date' ? 'active' : '']" @click="sortMode = 'date'">按日期</view>
-        <view :class="['sort-pill', sortMode === 'amount' ? 'active' : '']" @click="sortMode = 'amount'">按金额</view>
+        <view :class="['sort-pill', sortMode === 'date' ? 'active' : '']" @tap="sortMode = 'date'">按日期</view>
+        <view :class="['sort-pill', sortMode === 'amount' ? 'active' : '']" @tap="sortMode = 'amount'">按金额</view>
       </view>
     </view>
 
@@ -19,23 +19,34 @@
     <view
       v-for="bill in sortedBills"
       :key="bill.id"
-      class="bill-item"
-      @click="emit('edit', bill)"
-      @longpress="onDelete(bill.id)"
+      class="bill-swipe"
+      :class="{ open: openBillId === bill.id }"
+      @touchstart="handleTouchStart($event, bill.id)"
+      @touchmove="handleTouchMove($event, bill.id)"
+      @touchend="handleTouchEnd($event, bill.id)"
+      @touchcancel="handleTouchCancel"
     >
-      <view class="bill-icon">
-        {{ getIcon(bill.category) }}
-        <view class="bill-avatar-badge">{{ bill.personAvatar }}</view>
-      </view>
-      <view class="bill-info">
-        <view class="bill-main">
-          <text class="bill-category">{{ bill.category }}</text>
-          <text class="bill-person-name">{{ bill.personName }}</text>
+      <view class="bill-swipe-inner" :style="getSwipeStyle(bill.id)">
+        <view class="bill-item" @tap="handleItemTap(bill)">
+          <view class="bill-icon">
+            {{ getIcon(bill.category) }}
+            <view class="bill-avatar-badge">{{ bill.personAvatar }}</view>
+          </view>
+          <view class="bill-info">
+            <view class="bill-main">
+              <text class="bill-category">{{ bill.category }}</text>
+              <text class="bill-person-name">{{ bill.personName }}</text>
+            </view>
+            <text class="bill-date">{{ bill.date }}{{ bill.note ? ' · ' + bill.note : '' }}</text>
+          </view>
+          <view :class="['bill-amount', bill.type]">
+            {{ bill.type === 'expense' ? '-' : '+' }}{{ bill.amount.toFixed(2) }}
+          </view>
         </view>
-        <text class="bill-date">{{ bill.date }}{{ bill.note ? ' · ' + bill.note : '' }}</text>
-      </view>
-      <view :class="['bill-amount', bill.type]">
-        {{ bill.type === 'expense' ? '-' : '+' }}{{ bill.amount.toFixed(2) }}
+
+        <view class="delete-panel" @tap.stop="handleDelete(bill.id)">
+          <text class="delete-text">删除</text>
+        </view>
       </view>
     </view>
   </view>
@@ -52,6 +63,17 @@ const emit = defineEmits<{ (e: 'edit', bill: Bill): void }>();
 
 const { categories, removeBill } = useBills();
 const sortMode = ref<'date' | 'amount'>('date');
+const openBillId = ref<number | null>(null);
+const touchState = ref({
+  id: null as number | null,
+  startX: 0,
+  startY: 0,
+  offsetX: 0,
+  swiping: false,
+  locked: false,
+});
+const swipeThreshold = 48;
+const revealWidth = 168;
 
 const sortedBills = computed(() => {
   const list = [...props.bills];
@@ -75,27 +97,127 @@ const getIcon = (name: string) => {
   return all.find((cat) => cat.name === name)?.icon || '📒';
 };
 
-const onDelete = (id: number) => {
-  uni.showModal({
-    title: '提示',
-    content: '确定要删除这条账单吗？',
-    confirmColor: '#FF7675',
-    success: (res) => {
-      if (res.confirm) {
-        removeBill(id);
-      }
-    },
-  });
+const resetTouch = () => {
+  touchState.value = {
+    id: null,
+    startX: 0,
+    startY: 0,
+    offsetX: 0,
+    swiping: false,
+    locked: false,
+  };
+};
+
+const closeSwipe = () => {
+  openBillId.value = null;
+  resetTouch();
+};
+
+const handleItemTap = (bill: Bill) => {
+  if (openBillId.value === bill.id) {
+    closeSwipe();
+    return;
+  }
+  if (openBillId.value !== null) {
+    closeSwipe();
+    return;
+  }
+  emit('edit', bill);
+};
+
+const handleTouchStart = (event: any, id: number) => {
+  const touch = event?.touches?.[0];
+  if (!touch) return;
+  if (openBillId.value !== null && openBillId.value !== id) {
+    closeSwipe();
+  }
+  touchState.value = {
+    id,
+    startX: touch.clientX,
+    startY: touch.clientY,
+    offsetX: 0,
+    swiping: false,
+    locked: false,
+  };
+};
+
+const handleTouchMove = (event: any, id: number) => {
+  if (touchState.value.id !== id) return;
+  const touch = event?.touches?.[0];
+  if (!touch) return;
+
+  const deltaX = touch.clientX - touchState.value.startX;
+  const deltaY = touch.clientY - touchState.value.startY;
+
+  if (!touchState.value.swiping) {
+    if (Math.abs(deltaX) < 14) return;
+    if (Math.abs(deltaY) > Math.abs(deltaX) * 1.2) {
+      touchState.value.locked = true;
+      return;
+    }
+    touchState.value.swiping = true;
+  }
+
+  if (touchState.value.locked) return;
+
+  if (deltaX < 0) {
+    touchState.value.offsetX = Math.max(deltaX, -revealWidth);
+  } else {
+    touchState.value.offsetX = Math.min(deltaX, 0);
+  }
+};
+
+const handleTouchEnd = (_event: any, id: number) => {
+  if (touchState.value.id !== id) return;
+  const offsetX = touchState.value.offsetX;
+
+  if (offsetX <= -swipeThreshold) {
+    openBillId.value = id;
+  } else if (openBillId.value === id) {
+    openBillId.value = null;
+  }
+
+  resetTouch();
+};
+
+const handleTouchCancel = () => {
+  resetTouch();
+};
+
+const getSwipeStyle = (id: number) => {
+  if (touchState.value.id === id) {
+    return {
+      transform: `translateX(${touchState.value.offsetX}px)`,
+      transition: touchState.value.swiping ? 'none' : 'transform 0.22s ease',
+    };
+  }
+  if (openBillId.value === id) {
+    return {
+      transform: 'translateX(-168rpx)',
+      transition: 'transform 0.22s ease',
+    };
+  }
+  return {
+    transform: 'translateX(0)',
+    transition: 'transform 0.22s ease',
+  };
+};
+
+const handleDelete = (id: number) => {
+  removeBill(id);
+  if (openBillId.value === id) {
+    openBillId.value = null;
+  }
 };
 </script>
 
 <style scoped>
 .list-section {
-  background: rgba(249, 250, 252, 0.95);
-  border: 1rpx solid rgba(229, 234, 241, 0.95);
+  background: linear-gradient(180deg, rgba(248, 252, 249, 0.96) 0%, rgba(241, 248, 243, 0.98) 100%);
+  border: 1rpx solid var(--theme-border);
   border-radius: 36rpx;
-  padding: 20rpx 18rpx 10rpx;
-  box-shadow: 0 16rpx 36rpx rgba(47, 53, 66, 0.05);
+  padding: 24rpx 20rpx 12rpx;
+  box-shadow: var(--theme-card-shadow);
   backdrop-filter: blur(18rpx);
   overflow: hidden;
 }
@@ -105,62 +227,90 @@ const onDelete = (id: number) => {
   justify-content: space-between;
   align-items: center;
   gap: 16rpx;
-  padding: 4rpx 0 16rpx;
+  padding: 6rpx 0 18rpx;
 }
 
 .toolbar-labels { display: flex; flex-direction: column; }
-.toolbar-title { font-size: 28rpx; font-weight: 700; color: #2f3542; }
-.toolbar-hint { font-size: 20rpx; color: #a4b0be; margin-top: 4rpx; }
+.toolbar-title { font-size: 30rpx; font-weight: 700; color: var(--theme-text); }
+.toolbar-hint { font-size: 24rpx; color: var(--theme-text-muted); margin-top: 4rpx; }
 
 .sort-toggle {
   display: inline-flex;
   padding: 6rpx;
   border-radius: 999rpx;
-  background: rgba(240, 243, 247, 0.96);
-  border: 1rpx solid #e5eaf1;
+  background: rgba(236, 244, 238, 0.96);
+  border: 1rpx solid var(--theme-border);
 }
 
 .sort-pill {
-  min-width: 112rpx;
+  min-width: 120rpx;
   text-align: center;
-  padding: 10rpx 16rpx;
+  padding: 12rpx 18rpx;
   border-radius: 999rpx;
-  font-size: 22rpx;
-  color: #a4b0be;
+  font-size: 24rpx;
+  color: var(--theme-text-muted);
 }
 
 .sort-pill.active {
-  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-  color: #2f3542;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(235, 246, 238, 0.98) 100%);
+  color: var(--theme-text);
   font-weight: 700;
   box-shadow: 0 8rpx 20rpx rgba(47, 53, 66, 0.12);
 }
 
-.bill-item {
-  display: flex;
-  align-items: center;
-  padding: 22rpx 18rpx;
+.bill-swipe {
+  position: relative;
+  overflow: hidden;
   margin-bottom: 12rpx;
-  border: 1rpx solid #edf2f7;
   border-radius: 28rpx;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%);
-  box-shadow: 0 10rpx 22rpx rgba(47, 53, 66, 0.04);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  touch-action: pan-y;
 }
 
-.bill-item:last-child { margin-bottom: 10rpx; }
+.bill-swipe-inner {
+  display: flex;
+  width: calc(100% + 168rpx);
+  will-change: transform;
+}
+
+.bill-item {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 24rpx 20rpx;
+  border: 1rpx solid rgba(215, 232, 221, 0.96);
+  border-radius: 28rpx;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 247, 242, 0.98) 100%);
+  box-shadow: 0 10rpx 22rpx rgba(47, 53, 66, 0.04);
+}
+
 .bill-item:active { transform: scale(0.995); box-shadow: 0 8rpx 16rpx rgba(47, 53, 66, 0.05); }
 
+.delete-panel {
+  width: 168rpx;
+  margin-left: 12rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(180deg, #ff7675 0%, #f25f5c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-text {
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
 .bill-icon {
-  width: 84rpx;
-  height: 84rpx;
-  background: linear-gradient(180deg, rgba(116, 185, 255, 0.1) 0%, rgba(116, 185, 255, 0.06) 100%);
+  width: 88rpx;
+  height: 88rpx;
+  background: var(--theme-primary-soft);
   border: 1rpx solid rgba(116, 185, 255, 0.18);
   border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 38rpx;
+  font-size: 40rpx;
   margin-right: 20rpx;
   position: relative;
   flex-shrink: 0;
@@ -172,25 +322,25 @@ const onDelete = (id: number) => {
   right: -5rpx;
   width: 36rpx;
   height: 36rpx;
-  background: white;
+  background: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22rpx;
+  font-size: 24rpx;
   border: 2rpx solid #fff;
   box-shadow: 0 4rpx 10rpx rgba(47, 53, 66, 0.1);
 }
 
 .bill-info { flex: 1; min-width: 0; }
 .bill-main { display: flex; align-items: center; gap: 10rpx; margin-bottom: 6rpx; }
-.bill-category { font-size: 30rpx; font-weight: 650; color: #2f3542; }
-.bill-person-name { font-size: 20rpx; color: #a4b0be; padding: 6rpx 10rpx; border-radius: 999rpx; background: #f3f6fb; }
-.bill-date { font-size: 22rpx; color: #a4b0be; }
-.bill-amount { font-size: 32rpx; font-weight: 700; text-align: right; min-width: 160rpx; margin-left: 14rpx; }
-.bill-amount.expense { color: #2f3542; }
-.bill-amount.income { color: #55e6c1; }
+.bill-category { font-size: 34rpx; font-weight: 700; color: var(--theme-text); }
+.bill-person-name { font-size: 24rpx; color: var(--theme-text-muted); padding: 6rpx 10rpx; border-radius: 999rpx; background: rgba(236, 244, 238, 0.98); }
+.bill-date { font-size: 24rpx; color: var(--theme-text-muted); }
+.bill-amount { font-size: 34rpx; font-weight: 700; text-align: right; min-width: 160rpx; margin-left: 14rpx; }
+.bill-amount.expense { color: var(--theme-text); }
+.bill-amount.income { color: var(--theme-income); }
 .empty-state { display: flex; flex-direction: column; align-items: center; padding: 92rpx 0 78rpx; }
 .empty-icon { font-size: 76rpx; margin-bottom: 18rpx; }
-.empty-text { color: #a4b0be; font-size: 26rpx; }
+.empty-text { color: var(--theme-text-muted); font-size: 28rpx; }
 </style>

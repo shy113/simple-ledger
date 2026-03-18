@@ -1,20 +1,28 @@
-import { ref, computed } from 'vue';
+﻿import { ref, computed } from 'vue';
 import { getTodayDateString } from '../utils/dateHelper';
 import type { Bill, Category, Person } from '../types';
 
+type BackupSnapshot = {
+  version: 1;
+  exportedAt: string;
+  bills: Bill[];
+  categories: Record<'expense' | 'income', Category[]>;
+  persons: Person[];
+};
+
 const defaultCategories: Record<'expense' | 'income', Category[]> = {
   expense: [
-    { name: '餐饮', icon: '🍝' },
-    { name: '交通', icon: '🚇' },
+    { name: '餐饮', icon: '🍜' },
+    { name: '交通', icon: '🚗' },
     { name: '购物', icon: '🛍️' },
-    { name: '养车', icon: '🚗' },
+    { name: '养车', icon: '🛞' },
     { name: '娱乐', icon: '🎮' },
-    { name: '其他', icon: '🧾' },
+    { name: '其他', icon: '📦' },
   ],
   income: [
-    { name: '工资', icon: '💵' },
-    { name: '兼职', icon: '🛎️' },
-    { name: '其他', icon: '✨' },
+    { name: '工资', icon: '💼' },
+    { name: '兼职', icon: '🧾' },
+    { name: '其他', icon: '✅' },
   ],
 };
 
@@ -39,7 +47,7 @@ const normalizeCategories = (items: Category[], defaults: Category[]) => {
 
   if (otherItem) {
     combined.push(otherItem);
-  } else if (defaults.some((item) => item.name === '其他')) {
+  } else {
     const otherDefault = defaults.find((item) => item.name === '其他');
     if (otherDefault) combined.push(otherDefault);
   }
@@ -55,6 +63,43 @@ const mergeMissingCategories = (loaded: Record<'expense' | 'income', Category[]>
 const mergeMissingPersons = (loaded: Person[]) => {
   const missing = defaultPersons.filter((item) => !loaded.some((person) => person.name === item.name));
   return missing.length ? [...loaded, ...missing] : loaded;
+};
+
+const sanitizeBill = (item: any): Bill | null => {
+  if (!item || typeof item !== 'object') return null;
+  const type = item.type === 'income' ? 'income' : 'expense';
+  const amount = Number(item.amount);
+  if (!Number.isFinite(amount)) return null;
+  return {
+    id: Number(item.id) || Date.now(),
+    amount,
+    type,
+    category: String(item.category ?? '其他'),
+    personName: String(item.personName ?? '本人'),
+    personAvatar: String(item.personAvatar ?? '🧑'),
+    date: String(item.date ?? getTodayDateString()),
+    note: String(item.note ?? ''),
+  };
+};
+
+const sanitizeCategoryList = (items: any): Category[] => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => ({
+      name: String(item?.name ?? '').trim(),
+      icon: String(item?.icon ?? '🧩').trim() || '🧩',
+    }))
+    .filter((item) => item.name);
+};
+
+const sanitizePersonList = (items: any): Person[] => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => ({
+      name: String(item?.name ?? '').trim(),
+      avatar: String(item?.avatar ?? '👤').trim() || '👤',
+    }))
+    .filter((item) => item.name);
 };
 
 export function useBills() {
@@ -113,6 +158,33 @@ export function useBills() {
     sync();
   };
 
+  const exportBackupData = () => JSON.stringify(
+    {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      bills: bills.value,
+      categories: categories.value,
+      persons: persons.value,
+    } satisfies BackupSnapshot,
+    null,
+    2,
+  );
+
+  const restoreBackupData = (raw: string | Record<string, any>) => {
+    const payload = typeof raw === 'string' ? JSON.parse(raw.replace(/^\ufeff/, '')) : raw;
+    const nextBills = Array.isArray(payload?.bills) ? payload.bills.map(sanitizeBill).filter(Boolean) as Bill[] : [];
+    const nextCategories = payload?.categories && typeof payload.categories === 'object' ? payload.categories : {};
+    const nextPersons = sanitizePersonList(payload?.persons);
+
+    bills.value = nextBills;
+    categories.value = mergeMissingCategories({
+      expense: sanitizeCategoryList(nextCategories.expense),
+      income: sanitizeCategoryList(nextCategories.income),
+    });
+    persons.value = mergeMissingPersons(nextPersons);
+    sync();
+  };
+
   return {
     bills,
     categories,
@@ -123,6 +195,8 @@ export function useBills() {
     sortedBills,
     initData,
     sync,
+    exportBackupData,
+    restoreBackupData,
     addBill: (bill: Omit<Bill, 'id'>) => {
       bills.value.push({
         ...bill,

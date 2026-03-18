@@ -9,17 +9,17 @@ import BillHeader from '../../components/BillHeader.vue';
 import BillList from '../../views/Home/BillList.vue';
 import StatsView from '../../views/Home/StatsView.vue';
 import AddBillModal from '../../views/Home/AddBillModal.vue';
-import DonateModal from '../../views/Home/DonateModal.vue';
 import ManagementModals from '../../views/Home/ManagementModals.vue';
 
-const { bills, initData } = useBills();
+const { bills, initData, exportBackupData, restoreBackupData } = useBills();
 const { themeVars } = useTheme();
 
 const activeTab = ref<'list' | 'stats'>('list');
 const selectedMonth = ref(getCurrentMonthKey());
 const selectedType = ref<'expense' | 'income' | 'all'>('expense');
 const showAddModal = ref(false);
-const showDonateModal = ref(false);
+const showBackupModal = ref(false);
+const backupStep = ref<'main' | 'import'>('main');
 const showCatManager = ref(false);
 const showPersonManager = ref(false);
 const scrollTop = ref(0);
@@ -85,6 +85,106 @@ const shiftMonth = (offset: number) => {
   const nextMonth = String(next.getMonth() + 1).padStart(2, '0');
   selectedMonth.value = `${nextYear}-${nextMonth}`;
 };
+
+const closeBackupModal = () => {
+  backupStep.value = 'main';
+  showBackupModal.value = false;
+};
+
+const handleBackupExport = () => {
+  const payload = exportBackupData();
+  const clipboard = (uni as any).setClipboardData;
+  if (typeof clipboard !== 'function') {
+    uni.showToast({ title: '当前环境不支持复制', icon: 'none' });
+    return;
+  }
+
+  clipboard({
+    data: payload,
+    success: () => {
+      uni.showToast({ title: 'JSON 已复制', icon: 'success' });
+      closeBackupModal();
+    },
+    fail: () => {
+      uni.showToast({ title: '导出失败', icon: 'none' });
+    },
+  });
+};
+
+const confirmRestore = (raw: string) => {
+  uni.showModal({
+    title: '确认导入',
+    content: '导入会覆盖当前本地数据，确定继续吗？',
+    confirmColor: '#34C26B',
+    success: (res) => {
+      if (!res.confirm) return;
+      try {
+        restoreBackupData(raw);
+        uni.showToast({ title: '导入成功', icon: 'success' });
+        closeBackupModal();
+      } catch (error) {
+        uni.showToast({ title: '导入失败', icon: 'none' });
+      }
+    },
+  });
+};
+
+const handleImportClipboard = () => {
+  const getClipboard = (uni as any).getClipboardData;
+  if (typeof getClipboard !== 'function') {
+    uni.showToast({ title: '当前环境不支持剪贴板', icon: 'none' });
+    return;
+  }
+
+  getClipboard({
+    success: (res: any) => {
+      const raw = String(res.data || '').trim();
+      if (!raw) {
+        uni.showToast({ title: '剪贴板为空', icon: 'none' });
+        return;
+      }
+      confirmRestore(raw);
+    },
+    fail: () => {
+      uni.showToast({ title: '读取剪贴板失败', icon: 'none' });
+    },
+  });
+};
+
+const handleImportFile = () => {
+  const choose = (uni as any).chooseMessageFile;
+  if (typeof choose !== 'function') {
+    uni.showToast({ title: '当前环境不支持文件导入', icon: 'none' });
+    return;
+  }
+
+  choose({
+    count: 1,
+    type: 'file',
+    extension: ['json', 'txt'],
+    success: (res: any) => {
+      const file = res?.tempFiles?.[0];
+      const path = file?.path;
+      if (!path) {
+        uni.showToast({ title: '未选择文件', icon: 'none' });
+        return;
+      }
+
+      const fs = (globalThis as any).wx?.getFileSystemManager?.();
+      if (!fs?.readFile) {
+        uni.showToast({ title: '当前环境不支持读取文件', icon: 'none' });
+        return;
+      }
+
+      fs.readFile({
+        filePath: path,
+        encoding: 'utf8',
+        success: (readRes: any) => confirmRestore(String(readRes.data || '').trim()),
+        fail: () => uni.showToast({ title: '读取文件失败', icon: 'none' }),
+      });
+    },
+  });
+};
 </script>
 
 <template>
@@ -104,7 +204,9 @@ const shiftMonth = (offset: number) => {
           @next-month="shiftMonth(1)"
           @pick-month="handleMonthChange"
         />
-        <view class="heart-donate" @click="showDonateModal = true">❤</view>
+        <view class="header-actions">
+          <view class="backup-donate" @click="showBackupModal = true">备</view>
+        </view>
       </view>
 
       <view class="view-switcher">
@@ -163,7 +265,40 @@ const shiftMonth = (offset: number) => {
       @manage-person="showPersonManager = true"
     />
 
-    <DonateModal v-model="showDonateModal" />
+    <view v-if="showBackupModal" class="backup-mask" @click="closeBackupModal">
+      <view class="backup-sheet" @click.stop>
+        <view class="backup-header">
+          <text class="backup-title">数据备份</text>
+          <text class="backup-close" @click="closeBackupModal">×</text>
+        </view>
+        <text class="backup-desc">导出会生成 JSON 备份，导入会覆盖当前本地数据。</text>
+
+        <view v-if="backupStep === 'main'" class="backup-grid">
+          <view class="backup-card export-card" @click="handleBackupExport">
+            <text class="backup-card-title">导出备份</text>
+            <text class="backup-card-subtitle">复制 JSON 到剪贴板</text>
+          </view>
+          <view class="backup-card import-card" @click="backupStep = 'import'">
+            <text class="backup-card-title">导入备份</text>
+            <text class="backup-card-subtitle">从剪贴板或 JSON 文件恢复</text>
+          </view>
+        </view>
+
+        <view v-else class="backup-import-panel">
+          <view class="backup-import-row" @click="handleImportClipboard">
+            <text class="backup-import-row-title">从剪贴板导入</text>
+            <text class="backup-import-row-arrow">›</text>
+          </view>
+          <view class="backup-import-row" @click="handleImportFile">
+            <text class="backup-import-row-title">从文件导入</text>
+            <text class="backup-import-row-arrow">›</text>
+          </view>
+          <view class="backup-back" @click="backupStep = 'main'">
+            <text class="backup-back-text">返回</text>
+          </view>
+        </view>
+      </view>
+    </view>
 
     <ManagementModals
       v-model:showCat="showCatManager"
@@ -227,10 +362,17 @@ page {
   margin-bottom: 18rpx;
 }
 
-.heart-donate {
+.header-actions {
   position: absolute;
-  right: 14rpx;
-  top: 18rpx;
+  right: 12rpx;
+  top: 16rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+  z-index: 2;
+}
+
+.backup-donate {
   width: 68rpx;
   height: 68rpx;
   border-radius: 50%;
@@ -239,10 +381,10 @@ page {
   justify-content: center;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
   border: 1rpx solid rgba(133, 214, 158, 0.42);
-  color: #ff6b8b;
-  font-size: 32rpx;
   box-shadow: 0 10rpx 20rpx rgba(52, 101, 65, 0.08);
-  z-index: 2;
+  color: var(--theme-primary);
+  font-size: 28rpx;
+  font-weight: 700;
 }
 
 .view-switcher {
@@ -318,5 +460,122 @@ page {
   font-size: 68rpx;
   box-shadow: 0 18rpx 30rpx rgba(71, 126, 88, 0.25);
   z-index: 20;
+}
+
+.backup-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 310;
+  background: rgba(47, 53, 66, 0.56);
+  display: flex;
+  align-items: flex-end;
+}
+
+.backup-sheet {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 249, 243, 0.98) 100%);
+  border-radius: 42rpx 42rpx 0 0;
+  padding: 34rpx 34rpx 40rpx;
+  box-shadow: 0 -14rpx 40rpx rgba(47, 53, 66, 0.12);
+}
+
+.backup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18rpx;
+}
+
+.backup-title {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+
+.backup-close {
+  font-size: 40rpx;
+  color: var(--theme-text-muted);
+  padding: 8rpx 12rpx;
+}
+
+.backup-desc {
+  display: block;
+  font-size: 26rpx;
+  line-height: 1.6;
+  color: var(--theme-text-muted);
+  margin-bottom: 22rpx;
+}
+
+.backup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+}
+
+.backup-card {
+  padding: 24rpx 22rpx;
+  border-radius: 28rpx;
+  border: 1rpx solid rgba(215, 232, 221, 0.95);
+  box-shadow: 0 16rpx 30rpx rgba(52, 101, 65, 0.06);
+}
+
+.export-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+}
+
+.import-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(242, 248, 251, 0.98) 100%);
+}
+
+.backup-card-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+  margin-bottom: 8rpx;
+}
+
+.backup-card-subtitle {
+  display: block;
+  font-size: 22rpx;
+  color: var(--theme-text-muted);
+}
+
+.backup-import-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.backup-import-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 22rpx;
+  border-radius: 24rpx;
+  border: 1rpx solid rgba(215, 232, 221, 0.95);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+.backup-import-row-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+
+.backup-import-row-arrow {
+  font-size: 42rpx;
+  color: var(--theme-text-muted);
+  line-height: 1;
+}
+
+.backup-back {
+  margin-top: 6rpx;
+  text-align: center;
+}
+
+.backup-back-text {
+  font-size: 24rpx;
+  color: var(--theme-primary);
 }
 </style>

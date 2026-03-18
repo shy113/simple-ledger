@@ -9,6 +9,7 @@ import BillHeader from '../../components/BillHeader.vue';
 import BillList from '../../views/Home/BillList.vue';
 import StatsView from '../../views/Home/StatsView.vue';
 import AddBillModal from '../../views/Home/AddBillModal.vue';
+import DonateModal from '../../views/Home/DonateModal.vue';
 import ManagementModals from '../../views/Home/ManagementModals.vue';
 
 const { bills, initData } = useBills();
@@ -18,6 +19,7 @@ const activeTab = ref<'list' | 'stats'>('list');
 const selectedMonth = ref(getCurrentMonthKey());
 const selectedType = ref<'expense' | 'income' | 'all'>('expense');
 const showAddModal = ref(false);
+const showDonateModal = ref(false);
 const showCatManager = ref(false);
 const showPersonManager = ref(false);
 const scrollTop = ref(0);
@@ -91,16 +93,19 @@ const shiftMonth = (offset: number) => {
     <view class="ambient ambient-b"></view>
 
     <view class="fixed-header">
-      <BillHeader
-        :period-label="selectedMonthLabel"
-        :picker-value="selectedMonthPickerValue"
-        :balance="periodBalance"
-        :income="periodIncome"
-        :expense="periodExpense"
-        @prev-month="shiftMonth(-1)"
-        @next-month="shiftMonth(1)"
-        @pick-month="handleMonthChange"
-      />
+      <view class="header-wrap">
+        <BillHeader
+          :period-label="selectedMonthLabel"
+          :picker-value="selectedMonthPickerValue"
+          :balance="periodBalance"
+          :income="periodIncome"
+          :expense="periodExpense"
+          @prev-month="shiftMonth(-1)"
+          @next-month="shiftMonth(1)"
+          @pick-month="handleMonthChange"
+        />
+        <view class="heart-donate" @click="showDonateModal = true">❤</view>
+      </view>
 
       <view class="view-switcher">
         <view
@@ -157,6 +162,8 @@ const shiftMonth = (offset: number) => {
       @manage-cat="showCatManager = true"
       @manage-person="showPersonManager = true"
     />
+
+    <DonateModal v-model="showDonateModal" />
 
     <ManagementModals
       v-model:showCat="showCatManager"
@@ -215,14 +222,37 @@ page {
   z-index: 1;
 }
 
+.header-wrap {
+  position: relative;
+  margin-bottom: 18rpx;
+}
+
+.heart-donate {
+  position: absolute;
+  right: 14rpx;
+  top: 18rpx;
+  width: 68rpx;
+  height: 68rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  border: 1rpx solid rgba(133, 214, 158, 0.42);
+  color: #ff6b8b;
+  font-size: 32rpx;
+  box-shadow: 0 10rpx 20rpx rgba(52, 101, 65, 0.08);
+  z-index: 2;
+}
+
 .view-switcher {
   display: flex;
+  flex: 1;
   background: var(--theme-surface);
   border: 1rpx solid var(--theme-border);
   border-radius: 999rpx;
   padding: 6rpx;
   margin-bottom: 18rpx;
-  width: 300rpx;
   box-shadow: 0 10rpx 24rpx rgba(47, 53, 66, 0.04);
   backdrop-filter: blur(18rpx);
 }
@@ -259,41 +289,34 @@ page {
   border-radius: 999rpx;
   background: var(--theme-surface);
   border: 1rpx solid var(--theme-border);
-  box-shadow: 0 8rpx 18rpx rgba(47, 53, 66, 0.03);
-  backdrop-filter: blur(18rpx);
 }
 
 .type-item.active {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
   color: var(--theme-text);
-  font-weight: 700;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  border-color: rgba(52, 194, 107, 0.18);
+  box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08);
 }
 
 .scroll-content {
   flex: 1;
+  width: 100%;
   min-height: 0;
-  padding: 24rpx;
-  padding-top: 0;
-  padding-bottom: 24rpx;
-  box-sizing: border-box;
-  position: relative;
-  z-index: 1;
 }
 
 .add-fab {
   position: fixed;
-  right: 50rpx;
-  bottom: 60rpx;
-  width: 110rpx;
-  height: 110rpx;
+  right: 28rpx;
+  bottom: 34rpx;
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
   background: var(--theme-fab-gradient);
   color: white;
-  border-radius: 55rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 60rpx;
-  box-shadow: 0 18rpx 34rpx rgba(50, 194, 107, 0.28);
-  z-index: 100;
+  text-align: center;
+  line-height: 108rpx;
+  font-size: 68rpx;
+  box-shadow: 0 18rpx 30rpx rgba(71, 126, 88, 0.25);
+  z-index: 20;
 }
 </style>

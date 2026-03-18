@@ -1,4 +1,5 @@
-﻿import { ref, computed, onMounted } from 'vue';
+﻿<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
 import { useBills } from '../../composables/useBills';
 import type { Bill } from '../../types';
 import { formatMonthLabel, getCurrentMonthKey, getMonthKeyFromDate } from '../../utils/dateHelper';
@@ -74,6 +75,16 @@ const handleMonthChange = (event: any) => {
     selectedMonth.value = String(value).slice(0, 7);
   }
 };
+
+const shiftMonth = (offset: number) => {
+  const [yearStr, monthStr] = selectedMonth.value.split('-');
+  const year = Number(yearStr);
+  const month = Number(monthStr) - 1;
+  const next = new Date(year, month + offset, 1);
+  const nextYear = next.getFullYear();
+  const nextMonth = String(next.getMonth() + 1).padStart(2, '0');
+  selectedMonth.value = `${nextYear}-${nextMonth}`;
+};
 </script>
 
 <template>
@@ -89,10 +100,19 @@ const handleMonthChange = (event: any) => {
 
       <view class="filter-card">
         <view class="filter-row">
-          <text class="filter-label">月份</text>
+          <text class="filter-label">账期筛选</text>
+          <text class="filter-hint">默认当前月，可切换到任意年月</text>
+        </view>
+
+        <view class="month-action-row">
+          <view class="month-nav-btn" @click="shiftMonth(-1)">上一月</view>
           <picker mode="date" fields="month" :value="selectedMonthPickerValue" @change="handleMonthChange">
-            <view class="period-picker">{{ selectedMonthLabel }}</view>
+            <view class="period-picker">
+              <text class="picker-label">选择月份</text>
+              <text class="picker-value">{{ selectedMonthLabel }}</text>
+            </view>
           </picker>
+          <view class="month-nav-btn" @click="shiftMonth(1)">下一月</view>
         </view>
 
         <view class="type-switcher">
@@ -203,19 +223,55 @@ page {
 }
 
 .filter-label {
-  font-size: 26rpx;
-  color: #666;
+  font-size: 28rpx;
+  color: #111;
+  font-weight: 700;
+}
+
+.filter-hint {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.month-action-row {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  margin-bottom: 18rpx;
+}
+
+.month-nav-btn {
+  flex: 0 0 auto;
+  padding: 16rpx 20rpx;
+  border-radius: 999rpx;
+  background: #f5f6f8;
+  color: #333;
+  font-size: 24rpx;
+  font-weight: 600;
 }
 
 .period-picker {
-  min-width: 180rpx;
+  min-width: 220rpx;
   text-align: center;
-  padding: 12rpx 20rpx;
-  border-radius: 999rpx;
-  background: #f5f6f8;
-  color: #111;
-  font-size: 26rpx;
-  font-weight: 600;
+  padding: 16rpx 24rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(135deg, #111 0%, #333 100%);
+  color: #fff;
+  box-shadow: 0 10rpx 20rpx rgba(0, 0, 0, 0.12);
+}
+
+.picker-label {
+  display: block;
+  font-size: 20rpx;
+  opacity: 0.7;
+  margin-bottom: 4rpx;
+}
+
+.picker-value {
+  display: block;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
 }
 
 .type-switcher {

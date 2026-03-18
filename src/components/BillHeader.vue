@@ -113,12 +113,13 @@ defineEmits<{
   padding: 0 18rpx;
   border-radius: 20rpx;
   background: var(--theme-fab-gradient);
-  color: var(--theme-text);
+  color: rgba(255, 255, 255, 0.94);
   font-size: 26rpx;
   line-height: 66rpx;
   text-align: center;
   font-weight: 600;
-  border: 1rpx solid var(--theme-border);
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .month-selector {
@@ -131,20 +132,20 @@ defineEmits<{
   padding: 0 18rpx;
   border-radius: 20rpx;
   background: var(--theme-fab-gradient);
-  border: 1rpx solid rgba(215, 232, 221, 0.95);
-  box-shadow: 0 10rpx 22rpx rgba(52, 101, 65, 0.06);
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.05);
 }
 
 .month-selector-text {
   font-size: 30rpx;
   font-weight: 700;
-  color: var(--theme-text);
+  color: rgba(255, 255, 255, 0.96);
   line-height: 1;
 }
 
 .month-selector-icon {
   font-size: 20rpx;
-  color: var(--theme-text-muted);
+  color: rgba(255, 255, 255, 0.7);
   transform: translateY(2rpx);
 }
 </style>

@@ -12,7 +12,14 @@ import AddBillModal from '../../views/Home/AddBillModal.vue';
 import ManagementModals from '../../views/Home/ManagementModals.vue';
 
 const { bills, initData, exportBackupData, restoreBackupData } = useBills();
-const { themeVars } = useTheme();
+const { themeVars, currentThemeId, themeOptions, setTheme } = useTheme();
+
+const toggleTheme = () => {
+  const currentIndex = themeOptions.findIndex((t) => t.id === currentThemeId.value);
+  const nextIndex = (currentIndex + 1) % themeOptions.length;
+  setTheme(themeOptions[nextIndex].id);
+  uni.showToast({ title: `已切换至 ${themeOptions[nextIndex].name}`, icon: 'none' });
+};
 
 const activeTab = ref<'list' | 'stats'>('list');
 const selectedMonth = ref(getCurrentMonthKey());
@@ -205,6 +212,7 @@ const handleImportFile = () => {
           @pick-month="handleMonthChange"
         />
         <view class="header-actions">
+          <view class="backup-donate" style="margin-right: 12rpx;" @click="toggleTheme">🎨</view>
           <view class="backup-donate" @click="showBackupModal = true">备</view>
         </view>
       </view>
@@ -311,7 +319,7 @@ const handleImportFile = () => {
 <style>
 page {
   height: 100%;
-  background: linear-gradient(180deg, #eef7f0 0%, #e7f2eb 100%);
+  background: var(--theme-page-bg);
 }
 
 .container {
@@ -346,7 +354,7 @@ page {
   height: 420rpx;
   left: -180rpx;
   top: 460rpx;
-  background: rgba(52, 194, 107, 0.22);
+  background: var(--theme-accent-ambient);
 }
 
 .fixed-header {
@@ -367,8 +375,9 @@ page {
   right: 12rpx;
   top: 16rpx;
   display: flex;
-  flex-direction: column;
-  gap: 10rpx;
+  flex-direction: row;
+  align-items: center;
+  gap: 12rpx;
   z-index: 2;
 }
 
@@ -379,7 +388,7 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  background: var(--theme-surface-strong);
   border: 1rpx solid rgba(133, 214, 158, 0.42);
   box-shadow: 0 10rpx 20rpx rgba(52, 101, 65, 0.08);
   color: var(--theme-primary);
@@ -410,7 +419,7 @@ page {
 }
 
 .switch-item.active {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  background: var(--theme-surface-strong);
   color: var(--theme-text);
   font-weight: 700;
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05);
@@ -435,7 +444,7 @@ page {
 
 .type-item.active {
   color: var(--theme-text);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  background: var(--theme-surface-strong);
   border-color: rgba(52, 194, 107, 0.18);
   box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08);
 }
@@ -520,7 +529,7 @@ page {
 }
 
 .export-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  background: var(--theme-surface-strong);
 }
 
 .import-card {

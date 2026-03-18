@@ -213,7 +213,7 @@ const handleDelete = (id: number) => {
 
 <style scoped>
 .list-section {
-  background: linear-gradient(180deg, rgba(248, 252, 249, 0.96) 0%, rgba(241, 248, 243, 0.98) 100%);
+  background: var(--theme-card-gradient);
   border: 1rpx solid var(--theme-border);
   border-radius: 36rpx;
   padding: 24rpx 20rpx 12rpx;
@@ -238,7 +238,7 @@ const handleDelete = (id: number) => {
   display: inline-flex;
   padding: 6rpx;
   border-radius: 999rpx;
-  background: rgba(236, 244, 238, 0.96);
+  background: var(--theme-surface);
   border: 1rpx solid var(--theme-border);
 }
 
@@ -252,10 +252,10 @@ const handleDelete = (id: number) => {
 }
 
 .sort-pill.active {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(235, 246, 238, 0.98) 100%);
+  background: var(--theme-surface-strong);
   color: var(--theme-text);
   font-weight: 700;
-  box-shadow: 0 8rpx 20rpx rgba(47, 53, 66, 0.12);
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.05);
 }
 
 .bill-swipe {
@@ -277,19 +277,19 @@ const handleDelete = (id: number) => {
   display: flex;
   align-items: center;
   padding: 24rpx 20rpx;
-  border: 1rpx solid rgba(215, 232, 221, 0.96);
+  border: 1rpx solid var(--theme-border);
   border-radius: 28rpx;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 247, 242, 0.98) 100%);
-  box-shadow: 0 10rpx 22rpx rgba(47, 53, 66, 0.04);
+  background: var(--theme-surface-strong);
+  box-shadow: 0 10rpx 22rpx rgba(0, 0, 0, 0.02);
 }
 
-.bill-item:active { transform: scale(0.995); box-shadow: 0 8rpx 16rpx rgba(47, 53, 66, 0.05); }
+.bill-item:active { transform: scale(0.995); box-shadow: 0 8rpx 16rpx rgba(0, 0, 0, 0.05); }
 
 .delete-panel {
   width: 168rpx;
   margin-left: 12rpx;
   border-radius: 28rpx;
-  background: linear-gradient(180deg, #ff7675 0%, #f25f5c 100%);
+  background: var(--theme-expense);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -305,7 +305,7 @@ const handleDelete = (id: number) => {
   width: 88rpx;
   height: 88rpx;
   background: var(--theme-primary-soft);
-  border: 1rpx solid rgba(116, 185, 255, 0.18);
+  border: 1rpx solid var(--theme-border);
   border-radius: 24rpx;
   display: flex;
   align-items: center;
@@ -322,20 +322,20 @@ const handleDelete = (id: number) => {
   right: -5rpx;
   width: 36rpx;
   height: 36rpx;
-  background: #ffffff;
+  background: var(--theme-surface-strong);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 24rpx;
-  border: 2rpx solid #fff;
-  box-shadow: 0 4rpx 10rpx rgba(47, 53, 66, 0.1);
+  border: 2rpx solid var(--theme-surface-strong);
+  box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.1);
 }
 
 .bill-info { flex: 1; min-width: 0; }
 .bill-main { display: flex; align-items: center; gap: 10rpx; margin-bottom: 6rpx; }
 .bill-category { font-size: 34rpx; font-weight: 700; color: var(--theme-text); }
-.bill-person-name { font-size: 24rpx; color: var(--theme-text-muted); padding: 6rpx 10rpx; border-radius: 999rpx; background: rgba(236, 244, 238, 0.98); }
+.bill-person-name { font-size: 24rpx; color: var(--theme-text-muted); padding: 6rpx 10rpx; border-radius: 999rpx; background: var(--theme-primary-soft); }
 .bill-date { font-size: 24rpx; color: var(--theme-text-muted); }
 .bill-amount { font-size: 34rpx; font-weight: 700; text-align: right; min-width: 160rpx; margin-left: 14rpx; }
 .bill-amount.expense { color: var(--theme-text); }

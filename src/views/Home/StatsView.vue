@@ -92,19 +92,19 @@ const openDetail = (kind: 'category' | 'person', name: string) => {
 
 <style scoped>
 .stats-container { padding-bottom: 40rpx; }
-.stats-card { background: linear-gradient(180deg, rgba(248, 252, 249, 0.96) 0%, rgba(241, 248, 243, 0.98) 100%); border: 1rpx solid var(--theme-border); border-radius: 36rpx; padding: 34rpx 30rpx; margin-bottom: 24rpx; box-shadow: var(--theme-card-shadow); backdrop-filter: blur(18rpx); }
+.stats-card { background: var(--theme-card-gradient); border: 1rpx solid var(--theme-border); border-radius: 36rpx; padding: 34rpx 30rpx; margin-bottom: 24rpx; box-shadow: var(--theme-card-shadow); backdrop-filter: blur(18rpx); }
 .card-head { font-size: 28rpx; font-weight: 700; color: var(--theme-text-muted); margin-bottom: 24rpx; letter-spacing: 0.02em; }
 .stat-line { margin-bottom: 24rpx; padding: 14rpx 14rpx 16rpx; border-radius: 22rpx; }
 .stat-line:last-child { margin-bottom: 0; }
 .clickable { transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease; }
-.clickable:active { transform: scale(0.995); opacity: 0.95; background: rgba(50, 194, 107, 0.05); }
+.clickable:active { transform: scale(0.995); opacity: 0.95; background: var(--theme-primary-soft); }
 .line-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10rpx; }
 .item-name { font-size: 30rpx; color: var(--theme-text); font-weight: 700; }
 .item-amount { font-size: 30rpx; font-weight: 700; color: var(--theme-text); }
-.progress-bar { height: 10rpx; background: rgba(224, 236, 227, 0.98); border-radius: 999rpx; overflow: hidden; }
+.progress-bar { height: 10rpx; background: var(--theme-surface-soft); border-radius: 999rpx; overflow: hidden; }
 .progress-fill { height: 100%; border-radius: 999rpx; transition: width 0.6s ease; }
-.expense-bg { background: linear-gradient(90deg, var(--theme-expense) 0%, rgba(255, 166, 170, 1) 100%); }
-.person-bg { background: linear-gradient(90deg, var(--theme-primary) 0%, rgba(122, 208, 153, 1) 100%); }
+.expense-bg { background: linear-gradient(90deg, var(--theme-expense) 0%, var(--theme-expense-soft) 100%); }
+.person-bg { background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-primary-soft) 100%); }
 .empty-stats { text-align: center; padding: 36rpx 22rpx; color: var(--theme-text-muted); font-size: 28rpx; }
 </style>
 

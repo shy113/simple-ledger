@@ -78,8 +78,8 @@ const totalAmount = computed(() => detailBills.value.reduce((sum, bill) => sum +
 
 <style scoped>
 .page { min-height: 100vh; background: linear-gradient(180deg, var(--theme-page-bg) 0%, var(--theme-page-bg-alt) 100%); padding: 24rpx; box-sizing: border-box; }
-.hero-card, .summary-card, .list-card { background: linear-gradient(180deg, rgba(248, 252, 249, 0.96) 0%, rgba(241, 248, 243, 0.98) 100%); border: 1rpx solid var(--theme-border); border-radius: 36rpx; padding: 32rpx; margin-bottom: 24rpx; box-shadow: var(--theme-card-shadow); backdrop-filter: blur(18rpx); }
-.hero-card { background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(241, 248, 243, 0.98) 100%); }
+.hero-card, .summary-card, .list-card { background: var(--theme-card-gradient); border: 1rpx solid var(--theme-border); border-radius: 36rpx; padding: 32rpx; margin-bottom: 24rpx; box-shadow: var(--theme-card-shadow); backdrop-filter: blur(18rpx); }
+.hero-card { background: var(--theme-card-gradient); }
 .hero-kicker { font-size: 24rpx; color: var(--theme-text-muted); margin-bottom: 10rpx; }
 .hero-title { font-size: 40rpx; font-weight: 700; color: var(--theme-text); margin-bottom: 10rpx; }
 .hero-subtitle { font-size: 26rpx; color: var(--theme-text-muted); }
@@ -88,12 +88,12 @@ const totalAmount = computed(() => detailBills.value.reduce((sum, bill) => sum +
 .summary-label { font-size: 24rpx; color: var(--theme-text-muted); margin-bottom: 8rpx; }
 .summary-value { font-size: 36rpx; font-weight: 700; color: var(--theme-text); }
 .bill-list { display: flex; flex-direction: column; }
-.bill-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 22rpx 0; border-bottom: 1rpx solid rgba(215, 232, 221, 0.95); }
+.bill-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 22rpx 0; border-bottom: 1rpx solid var(--theme-border); }
 .bill-item:last-child { border-bottom: none; }
 .bill-main { flex: 1; min-width: 0; }
 .bill-name-row { display: flex; align-items: center; gap: 10rpx; margin-bottom: 8rpx; }
 .bill-name { font-size: 30rpx; font-weight: 700; color: var(--theme-text); }
-.bill-person { font-size: 22rpx; color: var(--theme-text-muted); padding: 6rpx 10rpx; border-radius: 999rpx; background: rgba(236, 244, 238, 0.98); }
+.bill-person { font-size: 22rpx; color: var(--theme-text-muted); padding: 6rpx 10rpx; border-radius: 999rpx; background: var(--theme-primary-soft); }
 .bill-meta { font-size: 24rpx; color: var(--theme-text-muted); }
 .bill-amount { font-size: 32rpx; font-weight: 700; color: var(--theme-text); margin-left: 20rpx; }
 .empty-state { text-align: center; color: var(--theme-text-muted); padding: 60rpx 20rpx; font-size: 28rpx; }

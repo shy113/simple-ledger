@@ -15,7 +15,12 @@
 
     <view class="month-controls">
       <view class="month-nav-btn" @click="$emit('prev-month')">上一月</view>
-      <picker mode="date" fields="month" :value="pickerValue" @change="$emit('pick-month', $event)">
+      <picker
+        mode="date"
+        fields="month"
+        :value="pickerValue"
+        @change="$emit('pick-month', $event)"
+      >
         <view class="month-selector">
           <text class="month-selector-text">{{ periodLabel }}</text>
           <text class="month-selector-icon">▾</text>
@@ -36,9 +41,9 @@ defineProps<{
 }>();
 
 defineEmits<{
-  (e: 'prev-month'): void;
-  (e: 'next-month'): void;
-  (e: 'pick-month', event: any): void;
+  (e: "prev-month"): void;
+  (e: "next-month"): void;
+  (e: "pick-month", event: any): void;
 }>();
 </script>
 
@@ -107,7 +112,7 @@ defineEmits<{
   height: 66rpx;
   padding: 0 18rpx;
   border-radius: 20rpx;
-  background: linear-gradient(180deg, rgba(240, 247, 242, 0.98) 0%, rgba(234, 244, 236, 0.98) 100%);
+  background: var(--theme-fab-gradient);
   color: var(--theme-text);
   font-size: 26rpx;
   line-height: 66rpx;
@@ -125,7 +130,7 @@ defineEmits<{
   gap: 8rpx;
   padding: 0 18rpx;
   border-radius: 20rpx;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  background: var(--theme-fab-gradient);
   border: 1rpx solid rgba(215, 232, 221, 0.95);
   box-shadow: 0 10rpx 22rpx rgba(52, 101, 65, 0.06);
 }

@@ -39,6 +39,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useBills } from '../../composables/useBills';
+import { useTheme } from '../../composables/useTheme';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -157,17 +158,17 @@ const handleImportFile = () => {
   position: fixed;
   inset: 0;
   z-index: 300;
-  background: rgba(47, 53, 66, 0.56);
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: flex-end;
 }
 
 .modal-content {
   width: 100%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 249, 243, 0.98) 100%);
+  background: var(--theme-card-gradient);
   border-radius: 42rpx 42rpx 0 0;
   padding: 34rpx 34rpx 40rpx;
-  box-shadow: 0 -14rpx 40rpx rgba(47, 53, 66, 0.12);
+  box-shadow: 0 -14rpx 40rpx rgba(0, 0, 0, 0.1);
 }
 
 .modal-header {
@@ -206,16 +207,16 @@ const handleImportFile = () => {
 .action-card {
   padding: 24rpx 22rpx;
   border-radius: 28rpx;
-  border: 1rpx solid rgba(215, 232, 221, 0.95);
-  box-shadow: 0 16rpx 30rpx rgba(52, 101, 65, 0.06);
+  border: 1rpx solid var(--theme-border);
+  box-shadow: 0 16rpx 30rpx rgba(0, 0, 0, 0.04);
 }
 
 .export-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(236, 248, 239, 0.98) 100%);
+  background: var(--theme-surface-strong);
 }
 
 .import-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(242, 248, 251, 0.98) 100%);
+  background: var(--theme-surface-soft);
 }
 
 .action-title {
@@ -244,8 +245,8 @@ const handleImportFile = () => {
   align-items: center;
   padding: 24rpx 22rpx;
   border-radius: 24rpx;
-  border: 1rpx solid rgba(215, 232, 221, 0.95);
-  background: rgba(255, 255, 255, 0.98);
+  border: 1rpx solid var(--theme-border);
+  background: var(--theme-surface-strong);
 }
 
 .import-row-title {

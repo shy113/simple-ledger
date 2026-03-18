@@ -71,18 +71,18 @@ const handleAddPerson = () => {
 </script>
 
 <style scoped>
-.modal-mask { position: fixed; inset: 0; background: rgba(47, 53, 66, 0.52); z-index: 300; display: flex; flex-direction: column; justify-content: flex-end; }
-.modal-content { background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 249, 244, 0.98) 100%); border-radius: 50rpx 50rpx 0 0; padding: 40rpx; animation: slideUp 0.3s; max-height: 70vh; display: flex; flex-direction: column; }
+.modal-mask { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 300; display: flex; flex-direction: column; justify-content: flex-end; }
+.modal-content { background: var(--theme-card-gradient); border-radius: 50rpx 50rpx 0 0; padding: 40rpx; animation: slideUp 0.3s; max-height: 70vh; display: flex; flex-direction: column; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .modal-header { display: flex; justify-content: space-between; margin-bottom: 30rpx; }
 .modal-title { font-size: 38rpx; font-weight: 700; color: var(--theme-text); }
 .close-btn { font-size: 36rpx; color: var(--theme-text-muted); }
 .cat-list-scroll { flex: 1; overflow-y: auto; margin-bottom: 30rpx; }
-.cat-manage-item { display: flex; justify-content: space-between; padding: 26rpx 0; border-bottom: 1rpx solid rgba(215, 232, 221, 0.95); color: var(--theme-text); }
+.cat-manage-item { display: flex; justify-content: space-between; padding: 26rpx 0; border-bottom: 1rpx solid var(--theme-border); color: var(--theme-text); }
 .del-btn { color: var(--theme-expense); font-size: 28rpx; }
-.add-form-box { display: flex; gap: 15rpx; padding-top: 20rpx; border-top: 1rpx solid rgba(215, 232, 221, 0.95); }
-.mini-input { width: 80rpx; background: rgba(242, 248, 243, 0.98); border-radius: 12rpx; text-align: center; height: 84rpx; }
-.flex-input { flex: 1; background: rgba(242, 248, 243, 0.98); border-radius: 12rpx; padding-left: 20rpx; height: 84rpx; }
+.add-form-box { display: flex; gap: 15rpx; padding-top: 20rpx; border-top: 1rpx solid var(--theme-border); }
+.mini-input { width: 80rpx; background: var(--theme-surface-soft); border-radius: 12rpx; text-align: center; height: 84rpx; color: var(--theme-text); }
+.flex-input { flex: 1; background: var(--theme-surface-soft); border-radius: 12rpx; padding-left: 20rpx; height: 84rpx; color: var(--theme-text); }
 .add-action { background: var(--theme-primary); color: white; font-size: 28rpx; height: 84rpx; line-height: 84rpx; padding: 0 40rpx; border-radius: 12rpx; }
 </style>
 

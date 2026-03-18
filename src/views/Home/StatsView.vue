@@ -1,17 +1,14 @@
-﻿<template>
+<template>
   <view class="stats-container">
-    <view class="stats-header">
-      <view>
-        <text class="stats-title">收支分析</text>
-        <view class="stats-subtitle">{{ periodLabel }}</view>
-      </view>
-      <view class="month-selector">支出占比</view>
-    </view>
-
     <view class="stats-card">
       <view class="card-head">按分类排行（支出）</view>
       <view v-if="categoryStats.length === 0" class="empty-stats">暂无支出数据</view>
-      <view v-for="item in categoryStats" :key="item.name" class="stat-line">
+      <view
+        v-for="item in categoryStats"
+        :key="item.name"
+        class="stat-line clickable"
+        @click="openDetail('category', item.name)"
+      >
         <view class="line-info">
           <text class="item-name">{{ item.icon }} {{ item.name }}</text>
           <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
@@ -25,7 +22,12 @@
     <view class="stats-card">
       <view class="card-head">按人物排行（支出）</view>
       <view v-if="personStats.length === 0" class="empty-stats">暂无支出数据</view>
-      <view v-for="item in personStats" :key="item.name" class="stat-line">
+      <view
+        v-for="item in personStats"
+        :key="item.name"
+        class="stat-line clickable"
+        @click="openDetail('person', item.name)"
+      >
         <view class="line-info">
           <text class="item-name">{{ item.avatar }} {{ item.name }}</text>
           <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
@@ -45,15 +47,13 @@ import type { Bill } from '../../types';
 
 const props = defineProps<{
   bills: Bill[];
-  periodLabel: string;
+  periodKey: string;
 }>();
 
 const { categories, persons } = useBills();
 
 const expenseBills = computed(() => props.bills.filter((bill) => bill.type === 'expense'));
-const totalExpense = computed(() =>
-  expenseBills.value.reduce((sum, bill) => sum + bill.amount, 0),
-);
+const totalExpense = computed(() => expenseBills.value.reduce((sum, bill) => sum + bill.amount, 0));
 
 const categoryStats = computed(() => {
   if (totalExpense.value === 0) return [];
@@ -96,6 +96,11 @@ const personStats = computed(() => {
     })
     .sort((a, b) => b.amount - a.amount);
 });
+
+const openDetail = (kind: 'category' | 'person', name: string) => {
+  const query = `kind=${encodeURIComponent(kind)}&name=${encodeURIComponent(name)}&month=${encodeURIComponent(props.periodKey)}`;
+  uni.navigateTo({ url: `/pages/stats-detail/index?${query}` });
+};
 </script>
 
 <style scoped>
@@ -103,93 +108,88 @@ const personStats = computed(() => {
   padding-bottom: 40rpx;
 }
 
-.stats-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 40rpx 0 30rpx;
-}
-
-.stats-title {
-  font-size: 34rpx;
-  font-weight: 700;
-  color: #333;
-}
-
-.stats-subtitle {
-  font-size: 24rpx;
-  color: #999;
-  margin-top: 8rpx;
-}
-
-.month-selector {
-  font-size: 24rpx;
-  color: #666;
-  background: #eee;
-  padding: 10rpx 20rpx;
-  border-radius: 30rpx;
-}
-
 .stats-card {
-  background: white;
-  border-radius: 40rpx;
-  padding: 40rpx 30rpx;
-  margin-bottom: 30rpx;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1rpx solid rgba(229, 234, 241, 0.9);
+  border-radius: 36rpx;
+  padding: 32rpx 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 16rpx 36rpx rgba(15, 23, 42, 0.04);
+  backdrop-filter: blur(18rpx);
 }
 
 .card-head {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #999;
-  margin-bottom: 30rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 22rpx;
+  letter-spacing: 0.02em;
 }
 
 .stat-line {
-  margin-bottom: 30rpx;
+  margin-bottom: 22rpx;
+  padding: 14rpx 14rpx 16rpx;
+  border-radius: 22rpx;
+}
+
+.stat-line:last-child {
+  margin-bottom: 0;
+}
+
+.clickable {
+  transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+}
+
+.clickable:active {
+  transform: scale(0.995);
+  opacity: 0.95;
+  background: rgba(15, 23, 42, 0.02);
 }
 
 .line-info {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12rpx;
+  align-items: center;
+  margin-bottom: 10rpx;
 }
 
 .item-name {
   font-size: 28rpx;
-  color: #333;
+  color: #111827;
+  font-weight: 600;
 }
 
 .item-amount {
   font-size: 28rpx;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #0f172a;
 }
 
 .progress-bar {
-  height: 12rpx;
-  background: #f5f5f5;
-  border-radius: 6rpx;
+  height: 10rpx;
+  background: #edf1f6;
+  border-radius: 999rpx;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  border-radius: 6rpx;
+  border-radius: 999rpx;
   transition: width 0.6s ease;
 }
 
 .expense-bg {
-  background: #ff7f50;
+  background: linear-gradient(90deg, #ff9f0a 0%, #ff7a00 100%);
 }
 
 .person-bg {
-  background: #007aff;
+  background: linear-gradient(90deg, #0a84ff 0%, #5ac8fa 100%);
 }
 
 .empty-stats {
   text-align: center;
-  padding: 40rpx;
-  color: #ccc;
+  padding: 34rpx 20rpx;
+  color: #94a3b8;
   font-size: 26rpx;
 }
 </style>

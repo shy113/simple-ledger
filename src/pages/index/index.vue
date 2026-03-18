@@ -53,6 +53,8 @@ const displayedBills = computed(() => {
   return monthBills.value.filter((bill) => bill.type === selectedType.value);
 });
 
+const showTypeSwitcher = computed(() => activeTab.value === 'list');
+
 const handleAddNew = () => {
   editingBill.value = null;
   showAddModal.value = true;
@@ -89,66 +91,54 @@ const shiftMonth = (offset: number) => {
 
 <template>
   <view class="container">
+    <view class="ambient ambient-a"></view>
+    <view class="ambient ambient-b"></view>
+
     <view class="fixed-header">
       <BillHeader
-        title="当前月份"
         :period-label="selectedMonthLabel"
+        :picker-value="selectedMonthPickerValue"
         :balance="periodBalance"
         :income="periodIncome"
         :expense="periodExpense"
+        @prev-month="shiftMonth(-1)"
+        @next-month="shiftMonth(1)"
+        @pick-month="handleMonthChange"
       />
-
-      <view class="filter-card">
-        <view class="filter-row">
-          <text class="filter-label">账期筛选</text>
-          <text class="filter-hint">默认当前月，可切换到任意年月</text>
-        </view>
-
-        <view class="month-action-row">
-          <view class="month-nav-btn" @click="shiftMonth(-1)">上一月</view>
-          <picker mode="date" fields="month" :value="selectedMonthPickerValue" @change="handleMonthChange">
-            <view class="period-picker">
-              <text class="picker-label">选择月份</text>
-              <text class="picker-value">{{ selectedMonthLabel }}</text>
-            </view>
-          </picker>
-          <view class="month-nav-btn" @click="shiftMonth(1)">下一月</view>
-        </view>
-
-        <view class="type-switcher">
-          <view
-            :class="['type-item', selectedType === 'expense' ? 'active' : '']"
-            @click="selectedType = 'expense'"
-          >
-            支出
-          </view>
-          <view
-            :class="['type-item', selectedType === 'income' ? 'active' : '']"
-            @click="selectedType = 'income'"
-          >
-            收入
-          </view>
-          <view
-            :class="['type-item', selectedType === 'all' ? 'active' : '']"
-            @click="selectedType = 'all'"
-          >
-            全部
-          </view>
-        </view>
-      </view>
 
       <view class="view-switcher">
         <view
           :class="['switch-item', activeTab === 'list' ? 'active' : '']"
           @click="activeTab = 'list'"
         >
-          明细
+          鏄庣粏
         </view>
         <view
           :class="['switch-item', activeTab === 'stats' ? 'active' : '']"
           @click="activeTab = 'stats'"
         >
-          分析
+          缁熻
+        </view>
+      </view>
+
+      <view v-if="showTypeSwitcher" class="type-switcher">
+        <view
+          :class="['type-item', selectedType === 'expense' ? 'active' : '']"
+          @click="selectedType = 'expense'"
+        >
+          鏀嚭
+        </view>
+        <view
+          :class="['type-item', selectedType === 'income' ? 'active' : '']"
+          @click="selectedType = 'income'"
+        >
+          鏀跺叆
+        </view>
+        <view
+          :class="['type-item', selectedType === 'all' ? 'active' : '']"
+          @click="selectedType = 'all'"
+        >
+          鍏ㄩ儴
         </view>
       </view>
     </view>
@@ -159,15 +149,15 @@ const shiftMonth = (offset: number) => {
       :scroll-top="scrollTop"
       :scroll-with-animation="false"
     >
-      <view v-show="activeTab === 'list'">
+      <view v-if="activeTab === 'list'" key="list-tab">
         <BillList :bills="displayedBills" @edit="handleEdit" />
         <view class="refresh-entry" @click="handleRegenerateMock">
-          <text>刷新测试数据</text>
+          <text>鍒锋柊娴嬭瘯鏁版嵁</text>
         </view>
       </view>
 
-      <view v-show="activeTab === 'stats'">
-        <StatsView :bills="monthBills" :period-label="selectedMonthLabel" />
+      <view v-else key="stats-tab">
+        <StatsView :bills="monthBills" :period-key="selectedMonth" />
       </view>
     </scroll-view>
 
@@ -191,126 +181,62 @@ const shiftMonth = (offset: number) => {
 <style>
 page {
   height: 100%;
+  background: #f9fafc;
 }
 
 .container {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #f8f9fb;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.75) 0, rgba(255, 255, 255, 0) 38%),
+    linear-gradient(180deg, #f9fafc 0%, #f2f5f9 100%);
+  overflow: hidden;
+}
+
+.ambient {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(20px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ambient-a {
+  width: 360rpx;
+  height: 360rpx;
+  right: -120rpx;
+  top: -90rpx;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.ambient-b {
+  width: 420rpx;
+  height: 420rpx;
+  left: -180rpx;
+  top: 460rpx;
+  background: rgba(116, 185, 255, 0.12);
 }
 
 .fixed-header {
   flex-shrink: 0;
-  padding: 30rpx;
-  padding-bottom: 0;
-  background-color: #f8f9fb;
-}
-
-.filter-card {
-  background: #fff;
-  border-radius: 32rpx;
-  padding: 24rpx 28rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 10rpx 24rpx rgba(0, 0, 0, 0.04);
-}
-
-.filter-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18rpx;
-}
-
-.filter-label {
-  font-size: 28rpx;
-  color: #111;
-  font-weight: 700;
-}
-
-.filter-hint {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.month-action-row {
-  display: flex;
-  align-items: center;
-  gap: 14rpx;
-  margin-bottom: 18rpx;
-}
-
-.month-nav-btn {
-  flex: 0 0 auto;
-  padding: 16rpx 20rpx;
-  border-radius: 999rpx;
-  background: #f5f6f8;
-  color: #333;
-  font-size: 24rpx;
-  font-weight: 600;
-}
-
-.period-picker {
-  min-width: 220rpx;
-  text-align: center;
-  padding: 16rpx 24rpx;
-  border-radius: 24rpx;
-  background: linear-gradient(135deg, #111 0%, #333 100%);
-  color: #fff;
-  box-shadow: 0 10rpx 20rpx rgba(0, 0, 0, 0.12);
-}
-
-.picker-label {
-  display: block;
-  font-size: 20rpx;
-  opacity: 0.7;
-  margin-bottom: 4rpx;
-}
-
-.picker-value {
-  display: block;
-  color: #fff;
-  font-size: 28rpx;
-  font-weight: 700;
-}
-
-.type-switcher {
-  display: flex;
-  gap: 12rpx;
-}
-
-.type-item {
-  flex: 1;
-  text-align: center;
-  padding: 14rpx 0;
-  font-size: 24rpx;
-  color: #666;
-  border-radius: 999rpx;
-  background: #f5f6f8;
-}
-
-.type-item.active {
-  background: #111;
-  color: #fff;
-  font-weight: 600;
-}
-
-.scroll-content {
-  flex: 1;
-  height: calc(100vh - 380px);
-  padding: 30rpx;
-  padding-top: 0;
-  padding-bottom: 150rpx;
-  box-sizing: border-box;
+  padding: 24rpx 24rpx 0;
+  background-color: transparent;
+  position: relative;
+  z-index: 1;
 }
 
 .view-switcher {
   display: flex;
-  background: #eee;
-  border-radius: 40rpx;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1rpx solid rgba(229, 234, 241, 0.95);
+  border-radius: 999rpx;
   padding: 6rpx;
-  margin-bottom: 30rpx;
+  margin-bottom: 18rpx;
   width: 300rpx;
+  box-shadow: 0 10rpx 24rpx rgba(47, 53, 66, 0.04);
+  backdrop-filter: blur(18rpx);
 }
 
 .switch-item {
@@ -318,16 +244,52 @@ page {
   text-align: center;
   padding: 12rpx 0;
   font-size: 26rpx;
-  color: #666;
-  border-radius: 35rpx;
-  transition: all 0.3s;
+  color: #a4b0be;
+  border-radius: 999rpx;
+  transition: all 0.24s ease;
 }
 
 .switch-item.active {
-  background: white;
-  color: #000;
+  background: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  color: #2f3542;
   font-weight: 700;
   box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.type-switcher {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 18rpx;
+}
+
+.type-item {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  font-size: 24rpx;
+  color: #a4b0be;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1rpx solid rgba(229, 234, 241, 0.95);
+  box-shadow: 0 8rpx 18rpx rgba(47, 53, 66, 0.03);
+  backdrop-filter: blur(18rpx);
+}
+
+.type-item.active {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+  color: #2f3542;
+  font-weight: 700;
+}
+
+.scroll-content {
+  flex: 1;
+  min-height: 0;
+  padding: 24rpx;
+  padding-top: 0;
+  padding-bottom: 24rpx;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
 .add-fab {
@@ -336,28 +298,29 @@ page {
   bottom: 60rpx;
   width: 110rpx;
   height: 110rpx;
-  background: #000;
+  background: linear-gradient(180deg, #8cc8ff 0%, #74b9ff 100%);
   color: white;
   border-radius: 55rpx;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 60rpx;
-  box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.3);
+  box-shadow: 0 18rpx 34rpx rgba(116, 185, 255, 0.3);
   z-index: 100;
 }
 
 .refresh-entry {
   text-align: center;
   padding: 30rpx;
-  margin-top: 20rpx;
+  margin-top: 24rpx;
 }
 
 .refresh-entry text {
   font-size: 24rpx;
-  color: #999;
+  color: #a4b0be;
   padding: 10rpx 20rpx;
   border-radius: 20rpx;
-  background: #f5f5f5;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1rpx solid #eef2f7;
 }
 </style>

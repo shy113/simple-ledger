@@ -12,8 +12,8 @@
         </view>
       </view>
       <view class="add-form-box">
-        <input class="mini-input" v-model="newCat.icon" placeholder="图标" />
-        <input class="flex-input" v-model="newCat.name" placeholder="分类名" />
+        <input class="mini-input" v-model="newCat.icon" placeholder="图标" confirm-type="done" :adjust-position="false" />
+        <input class="flex-input" v-model="newCat.name" placeholder="分类名" confirm-type="done" :adjust-position="false" />
         <button class="add-action" @click="handleAddCat">添加</button>
       </view>
     </view>
@@ -32,8 +32,8 @@
         </view>
       </view>
       <view class="add-form-box">
-        <input class="mini-input" v-model="newPerson.avatar" placeholder="头像" />
-        <input class="flex-input" v-model="newPerson.name" placeholder="姓名" />
+        <input class="mini-input" v-model="newPerson.avatar" placeholder="头像" confirm-type="done" :adjust-position="false" />
+        <input class="flex-input" v-model="newPerson.name" placeholder="姓名" confirm-type="done" :adjust-position="false" />
         <button class="add-action" @click="handleAddPerson">添加</button>
       </view>
     </view>
@@ -44,8 +44,8 @@
 import { ref } from 'vue';
 import { useBills } from '../../composables/useBills';
 
-const props = defineProps<{
-  showCat: boolean;
+const props = defineProps<{ 
+  showCat: boolean; 
   showPerson: boolean;
   type: 'expense' | 'income';
 }>();

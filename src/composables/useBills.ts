@@ -104,11 +104,12 @@ export function useBills() {
     initData,
     sync,
     inject50MockData,
-    addBill: (b: Omit<Bill, "id" | "date">) => {
+    addBill: (b: Omit<Bill, "id">) => {
+      const today = new Date().toLocaleDateString("zh-CN");
       bills.value.push({
         ...b,
         id: Date.now(),
-        date: b.date || new Date().toLocaleDateString(),
+        date: b.date || today,
       });
       sync();
     },

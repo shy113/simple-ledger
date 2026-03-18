@@ -6,18 +6,8 @@
         <text class="toolbar-hint">当前：{{ sortMode === 'date' ? '按日期' : '按金额' }}</text>
       </view>
       <view class="sort-toggle">
-        <view
-          :class="['sort-pill', sortMode === 'date' ? 'active' : '']"
-          @click="sortMode = 'date'"
-        >
-          按日期
-        </view>
-        <view
-          :class="['sort-pill', sortMode === 'amount' ? 'active' : '']"
-          @click="sortMode = 'amount'"
-        >
-          按金额
-        </view>
+        <view :class="['sort-pill', sortMode === 'date' ? 'active' : '']" @click="sortMode = 'date'">按日期</view>
+        <view :class="['sort-pill', sortMode === 'amount' ? 'active' : '']" @click="sortMode = 'amount'">按金额</view>
       </view>
     </view>
 
@@ -56,13 +46,9 @@ import { computed, ref } from 'vue';
 import { useBills } from '../../composables/useBills';
 import type { Bill } from '../../types';
 
-const props = defineProps<{
-  bills: Bill[];
-}>();
+const props = defineProps<{ bills: Bill[] }>();
 
-const emit = defineEmits<{
-  (e: 'edit', bill: Bill): void;
-}>();
+const emit = defineEmits<{ (e: 'edit', bill: Bill): void }>();
 
 const { categories, removeBill } = useBills();
 const sortMode = ref<'date' | 'amount'>('date');
@@ -122,22 +108,9 @@ const onDelete = (id: number) => {
   padding: 4rpx 0 16rpx;
 }
 
-.toolbar-labels {
-  display: flex;
-  flex-direction: column;
-}
-
-.toolbar-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #2f3542;
-}
-
-.toolbar-hint {
-  font-size: 20rpx;
-  color: #a4b0be;
-  margin-top: 4rpx;
-}
+.toolbar-labels { display: flex; flex-direction: column; }
+.toolbar-title { font-size: 28rpx; font-weight: 700; color: #2f3542; }
+.toolbar-hint { font-size: 20rpx; color: #a4b0be; margin-top: 4rpx; }
 
 .sort-toggle {
   display: inline-flex;
@@ -175,14 +148,8 @@ const onDelete = (id: number) => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.bill-item:last-child {
-  margin-bottom: 10rpx;
-}
-
-.bill-item:active {
-  transform: scale(0.995);
-  box-shadow: 0 8rpx 16rpx rgba(47, 53, 66, 0.05);
-}
+.bill-item:last-child { margin-bottom: 10rpx; }
+.bill-item:active { transform: scale(0.995); box-shadow: 0 8rpx 16rpx rgba(47, 53, 66, 0.05); }
 
 .bill-icon {
   width: 84rpx;
@@ -215,67 +182,15 @@ const onDelete = (id: number) => {
   box-shadow: 0 4rpx 10rpx rgba(47, 53, 66, 0.1);
 }
 
-.bill-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.bill-main {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  margin-bottom: 6rpx;
-}
-
-.bill-category {
-  font-size: 30rpx;
-  font-weight: 650;
-  color: #2f3542;
-}
-
-.bill-person-name {
-  font-size: 20rpx;
-  color: #a4b0be;
-  padding: 6rpx 10rpx;
-  border-radius: 999rpx;
-  background: #f3f6fb;
-}
-
-.bill-date {
-  font-size: 22rpx;
-  color: #a4b0be;
-}
-
-.bill-amount {
-  font-size: 32rpx;
-  font-weight: 700;
-  text-align: right;
-  min-width: 160rpx;
-  margin-left: 14rpx;
-}
-
-.bill-amount.expense {
-  color: #2f3542;
-}
-
-.bill-amount.income {
-  color: #55e6c1;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 92rpx 0 78rpx;
-}
-
-.empty-icon {
-  font-size: 76rpx;
-  margin-bottom: 18rpx;
-}
-
-.empty-text {
-  color: #a4b0be;
-  font-size: 26rpx;
-}
+.bill-info { flex: 1; min-width: 0; }
+.bill-main { display: flex; align-items: center; gap: 10rpx; margin-bottom: 6rpx; }
+.bill-category { font-size: 30rpx; font-weight: 650; color: #2f3542; }
+.bill-person-name { font-size: 20rpx; color: #a4b0be; padding: 6rpx 10rpx; border-radius: 999rpx; background: #f3f6fb; }
+.bill-date { font-size: 22rpx; color: #a4b0be; }
+.bill-amount { font-size: 32rpx; font-weight: 700; text-align: right; min-width: 160rpx; margin-left: 14rpx; }
+.bill-amount.expense { color: #2f3542; }
+.bill-amount.income { color: #55e6c1; }
+.empty-state { display: flex; flex-direction: column; align-items: center; padding: 92rpx 0 78rpx; }
+.empty-icon { font-size: 76rpx; margin-bottom: 18rpx; }
+.empty-text { color: #a4b0be; font-size: 26rpx; }
 </style>

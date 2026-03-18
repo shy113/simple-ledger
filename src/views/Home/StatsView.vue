@@ -57,43 +57,33 @@ const totalExpense = computed(() => expenseBills.value.reduce((sum, bill) => sum
 
 const categoryStats = computed(() => {
   if (totalExpense.value === 0) return [];
-
   const statsMap: Record<string, number> = {};
   expenseBills.value.forEach((bill) => {
     statsMap[bill.category] = (statsMap[bill.category] || 0) + bill.amount;
   });
-
   return Object.keys(statsMap)
-    .map((name) => {
-      const icon = categories.value.expense.find((cat) => cat.name === name)?.icon || '📒';
-      return {
-        name,
-        icon,
-        amount: statsMap[name],
-        percent: (statsMap[name] / totalExpense.value) * 100,
-      };
-    })
+    .map((name) => ({
+      name,
+      icon: categories.value.expense.find((cat) => cat.name === name)?.icon || '📒',
+      amount: statsMap[name],
+      percent: (statsMap[name] / totalExpense.value) * 100,
+    }))
     .sort((a, b) => b.amount - a.amount);
 });
 
 const personStats = computed(() => {
   if (totalExpense.value === 0) return [];
-
   const statsMap: Record<string, number> = {};
   expenseBills.value.forEach((bill) => {
     statsMap[bill.personName] = (statsMap[bill.personName] || 0) + bill.amount;
   });
-
   return Object.keys(statsMap)
-    .map((name) => {
-      const avatar = persons.value.find((person) => person.name === name)?.avatar || '👤';
-      return {
-        name,
-        avatar,
-        amount: statsMap[name],
-        percent: (statsMap[name] / totalExpense.value) * 100,
-      };
-    })
+    .map((name) => ({
+      name,
+      avatar: persons.value.find((person) => person.name === name)?.avatar || '👤',
+      amount: statsMap[name],
+      percent: (statsMap[name] / totalExpense.value) * 100,
+    }))
     .sort((a, b) => b.amount - a.amount);
 });
 
@@ -104,92 +94,19 @@ const openDetail = (kind: 'category' | 'person', name: string) => {
 </script>
 
 <style scoped>
-.stats-container {
-  padding-bottom: 40rpx;
-}
-
-.stats-card {
-  background: rgba(255, 255, 255, 0.8);
-  border: 1rpx solid rgba(229, 234, 241, 0.9);
-  border-radius: 36rpx;
-  padding: 32rpx 28rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 16rpx 36rpx rgba(15, 23, 42, 0.04);
-  backdrop-filter: blur(18rpx);
-}
-
-.card-head {
-  font-size: 24rpx;
-  font-weight: 700;
-  color: #64748b;
-  margin-bottom: 22rpx;
-  letter-spacing: 0.02em;
-}
-
-.stat-line {
-  margin-bottom: 22rpx;
-  padding: 14rpx 14rpx 16rpx;
-  border-radius: 22rpx;
-}
-
-.stat-line:last-child {
-  margin-bottom: 0;
-}
-
-.clickable {
-  transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
-}
-
-.clickable:active {
-  transform: scale(0.995);
-  opacity: 0.95;
-  background: rgba(15, 23, 42, 0.02);
-}
-
-.line-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10rpx;
-}
-
-.item-name {
-  font-size: 28rpx;
-  color: #111827;
-  font-weight: 600;
-}
-
-.item-amount {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.progress-bar {
-  height: 10rpx;
-  background: #edf1f6;
-  border-radius: 999rpx;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 999rpx;
-  transition: width 0.6s ease;
-}
-
-.expense-bg {
-  background: linear-gradient(90deg, #ff9f0a 0%, #ff7a00 100%);
-}
-
-.person-bg {
-  background: linear-gradient(90deg, #0a84ff 0%, #5ac8fa 100%);
-}
-
-.empty-stats {
-  text-align: center;
-  padding: 34rpx 20rpx;
-  color: #94a3b8;
-  font-size: 26rpx;
-}
+.stats-container { padding-bottom: 40rpx; }
+.stats-card { background: rgba(255, 255, 255, 0.82); border: 1rpx solid rgba(229, 234, 241, 0.95); border-radius: 36rpx; padding: 32rpx 28rpx; margin-bottom: 24rpx; box-shadow: 0 16rpx 36rpx rgba(47, 53, 66, 0.04); backdrop-filter: blur(18rpx); }
+.card-head { font-size: 24rpx; font-weight: 700; color: #a4b0be; margin-bottom: 22rpx; letter-spacing: 0.02em; }
+.stat-line { margin-bottom: 22rpx; padding: 14rpx 14rpx 16rpx; border-radius: 22rpx; }
+.stat-line:last-child { margin-bottom: 0; }
+.clickable { transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease; }
+.clickable:active { transform: scale(0.995); opacity: 0.95; background: rgba(47, 53, 66, 0.02); }
+.line-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10rpx; }
+.item-name { font-size: 28rpx; color: #2f3542; font-weight: 600; }
+.item-amount { font-size: 28rpx; font-weight: 700; color: #2f3542; }
+.progress-bar { height: 10rpx; background: #edf1f6; border-radius: 999rpx; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 999rpx; transition: width 0.6s ease; }
+.expense-bg { background: linear-gradient(90deg, #ff7675 0%, #ff9aa2 100%); }
+.person-bg { background: linear-gradient(90deg, #55e6c1 0%, #74b9ff 100%); }
+.empty-stats { text-align: center; padding: 34rpx 20rpx; color: #a4b0be; font-size: 26rpx; }
 </style>

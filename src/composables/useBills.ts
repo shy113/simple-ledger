@@ -1,13 +1,13 @@
-﻿import { ref, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { getTodayDateString } from '../utils/dateHelper';
 import type { Bill, Category, Person } from '../types';
 
-const bills = ref<Bill[]>([]);
-const categories = ref<Record<'expense' | 'income', Category[]>>({
+const defaultCategories: Record<'expense' | 'income', Category[]> = {
   expense: [
     { name: '餐饮', icon: '🍝' },
     { name: '交通', icon: '🚇' },
     { name: '购物', icon: '🛍️' },
+    { name: '养车', icon: '🚗' },
     { name: '娱乐', icon: '🎮' },
     { name: '其他', icon: '🧾' },
   ],
@@ -16,16 +16,46 @@ const categories = ref<Record<'expense' | 'income', Category[]>>({
     { name: '兼职', icon: '🛎️' },
     { name: '其他', icon: '✨' },
   ],
-});
-const persons = ref<Person[]>([
+};
+
+const defaultPersons: Person[] = [
   { name: '本人', avatar: '🧑' },
   { name: '家人', avatar: '👨‍👩‍👧‍👦' },
   { name: '朋友', avatar: '🤝' },
-]);
+];
 
-function pad(num: number): string {
-  return String(num).padStart(2, '0');
-}
+const bills = ref<Bill[]>([]);
+const categories = ref<Record<'expense' | 'income', Category[]>>({
+  expense: [...defaultCategories.expense],
+  income: [...defaultCategories.income],
+});
+const persons = ref<Person[]>([...defaultPersons]);
+
+const normalizeCategories = (items: Category[], defaults: Category[]) => {
+  const otherItem = items.find((item) => item.name === '其他');
+  const rest = items.filter((item) => item.name !== '其他');
+  const missingDefaults = defaults.filter((item) => !items.some((cat) => cat.name === item.name && cat.icon === item.icon));
+  const combined = [...rest, ...missingDefaults.filter((item) => item.name !== '其他')];
+
+  if (otherItem) {
+    combined.push(otherItem);
+  } else if (defaults.some((item) => item.name === '其他')) {
+    const otherDefault = defaults.find((item) => item.name === '其他');
+    if (otherDefault) combined.push(otherDefault);
+  }
+
+  return combined;
+};
+
+const mergeMissingCategories = (loaded: Record<'expense' | 'income', Category[]>) => ({
+  expense: normalizeCategories(loaded.expense, defaultCategories.expense),
+  income: normalizeCategories(loaded.income, defaultCategories.income),
+});
+
+const mergeMissingPersons = (loaded: Person[]) => {
+  const missing = defaultPersons.filter((item) => !loaded.some((person) => person.name === item.name));
+  return missing.length ? [...loaded, ...missing] : loaded;
+};
 
 export function useBills() {
   const totalExpense = computed(() =>
@@ -47,50 +77,40 @@ export function useBills() {
     uni.setStorageSync('my_persons', JSON.stringify(persons.value));
   };
 
-  const inject50MockData = () => {
-    const newMockBills: Bill[] = [];
-    const expCats = categories.value.expense;
-    const incCats = categories.value.income;
-    const ps = persons.value;
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const maxDay = Math.max(1, Math.min(now.getDate(), new Date(year, month + 1, 0).getDate()));
-
-    for (let i = 1; i <= 50; i++) {
-      const isIncome = Math.random() > 0.85;
-      const catList = isIncome ? incCats : expCats;
-      const cat = catList[Math.floor(Math.random() * catList.length)];
-      const person = ps[Math.floor(Math.random() * ps.length)];
-      const day = Math.floor(Math.random() * maxDay) + 1;
-      const date = `${year}-${pad(month + 1)}-${pad(day)}`;
-
-      newMockBills.push({
-        id: i,
-        amount: isIncome ? Math.random() * 5000 + 500 : Math.random() * 200 + 10,
-        type: isIncome ? 'income' : 'expense',
-        category: cat.name,
-        personName: person.name,
-        personAvatar: person.avatar,
-        date,
-        note: `模拟记录 #${i}`,
-      });
-    }
-
-    bills.value = newMockBills;
-    sync();
-  };
-
   const initData = () => {
     const b = uni.getStorageSync('my_bills');
-    if (b) bills.value = JSON.parse(b);
-    else inject50MockData();
+    bills.value = b ? JSON.parse(b) : [];
 
     const c = uni.getStorageSync('my_categories');
-    if (c) categories.value = JSON.parse(c);
+    if (c) {
+      const loaded = JSON.parse(c) as Record<'expense' | 'income', Category[]>;
+      const merged = mergeMissingCategories(loaded);
+      categories.value = merged;
+      if (JSON.stringify(merged) !== JSON.stringify(loaded)) {
+        sync();
+      }
+    }
 
     const p = uni.getStorageSync('my_persons');
-    if (p) persons.value = JSON.parse(p);
+    if (p) {
+      const loaded = JSON.parse(p) as Person[];
+      const merged = mergeMissingPersons(loaded);
+      persons.value = merged;
+      if (JSON.stringify(merged) !== JSON.stringify(loaded)) {
+        sync();
+      }
+    }
+  };
+
+  const addCategory = (type: 'expense' | 'income', cat: Category) => {
+    const list = categories.value[type];
+    const otherIndex = list.findIndex((item) => item.name === '其他');
+    if (otherIndex === -1) {
+      list.push(cat);
+    } else {
+      list.splice(otherIndex, 0, cat);
+    }
+    sync();
   };
 
   return {
@@ -103,7 +123,6 @@ export function useBills() {
     sortedBills,
     initData,
     sync,
-    inject50MockData,
     addBill: (bill: Omit<Bill, 'id'>) => {
       bills.value.push({
         ...bill,
@@ -123,10 +142,7 @@ export function useBills() {
       bills.value = bills.value.filter((item) => item.id !== id);
       sync();
     },
-    addCategory: (type: 'expense' | 'income', cat: Category) => {
-      categories.value[type].push(cat);
-      sync();
-    },
+    addCategory,
     removeCategory: (type: 'expense' | 'income', index: number) => {
       categories.value[type].splice(index, 1);
       sync();

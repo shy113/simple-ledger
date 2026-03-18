@@ -10,7 +10,7 @@ import StatsView from '../../views/Home/StatsView.vue';
 import AddBillModal from '../../views/Home/AddBillModal.vue';
 import ManagementModals from '../../views/Home/ManagementModals.vue';
 
-const { bills, initData, inject50MockData } = useBills();
+const { bills, initData } = useBills();
 
 const activeTab = ref<'list' | 'stats'>('list');
 const selectedMonth = ref(getCurrentMonthKey());
@@ -65,12 +65,6 @@ const handleEdit = (bill: Bill) => {
   showAddModal.value = true;
 };
 
-const handleRegenerateMock = () => {
-  inject50MockData();
-  scrollTop.value = scrollTop.value === 0 ? 0.1 : 0;
-  uni.showToast({ title: '已重新生成50条测试数据', icon: 'none' });
-};
-
 const handleMonthChange = (event: any) => {
   const value = event?.detail?.value || '';
   if (value) {
@@ -111,13 +105,13 @@ const shiftMonth = (offset: number) => {
           :class="['switch-item', activeTab === 'list' ? 'active' : '']"
           @click="activeTab = 'list'"
         >
-          鏄庣粏
+          明细
         </view>
         <view
           :class="['switch-item', activeTab === 'stats' ? 'active' : '']"
           @click="activeTab = 'stats'"
         >
-          缁熻
+          统计
         </view>
       </view>
 
@@ -126,34 +120,26 @@ const shiftMonth = (offset: number) => {
           :class="['type-item', selectedType === 'expense' ? 'active' : '']"
           @click="selectedType = 'expense'"
         >
-          鏀嚭
+          支出
         </view>
         <view
           :class="['type-item', selectedType === 'income' ? 'active' : '']"
           @click="selectedType = 'income'"
         >
-          鏀跺叆
+          收入
         </view>
         <view
           :class="['type-item', selectedType === 'all' ? 'active' : '']"
           @click="selectedType = 'all'"
         >
-          鍏ㄩ儴
+          全部
         </view>
       </view>
     </view>
 
-    <scroll-view
-      class="scroll-content"
-      scroll-y
-      :scroll-top="scrollTop"
-      :scroll-with-animation="false"
-    >
+    <scroll-view class="scroll-content" scroll-y :scroll-top="scrollTop" :scroll-with-animation="false">
       <view v-if="activeTab === 'list'" key="list-tab">
         <BillList :bills="displayedBills" @edit="handleEdit" />
-        <view class="refresh-entry" @click="handleRegenerateMock">
-          <text>鍒锋柊娴嬭瘯鏁版嵁</text>
-        </view>
       </view>
 
       <view v-else key="stats-tab">
@@ -307,20 +293,5 @@ page {
   font-size: 60rpx;
   box-shadow: 0 18rpx 34rpx rgba(116, 185, 255, 0.3);
   z-index: 100;
-}
-
-.refresh-entry {
-  text-align: center;
-  padding: 30rpx;
-  margin-top: 24rpx;
-}
-
-.refresh-entry text {
-  font-size: 24rpx;
-  color: #a4b0be;
-  padding: 10rpx 20rpx;
-  border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1rpx solid #eef2f7;
 }
 </style>

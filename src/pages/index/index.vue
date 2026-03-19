@@ -133,7 +133,6 @@ const handleImportFile = () => {
     <view class="ambient ambient-a"></view>
     <view class="ambient ambient-b"></view>
 
-    <!-- 顶栏：左右缩进 32rpx -->
     <view class="fixed-header">
       <view class="header-wrap">
         <BillHeader
@@ -170,7 +169,6 @@ const handleImportFile = () => {
     </view>
 
     <scroll-view class="scroll-content" scroll-y>
-      <!-- 内容包裹层：左右缩进 32rpx -->
       <view :key="viewKey" class="view-content-wrap fade-in">
         <BillList v-if="activeTab === 'list'" :bills="displayedBills" @edit="handleEdit" />
         <StatsView v-else :all-bills="bills" :period-key="selectedMonth" :mode="statMode" />
@@ -216,7 +214,6 @@ page { height: 100%; background: var(--theme-page-bg); }
 .ambient-a { width: 360rpx; height: 360rpx; right: -120rpx; top: -90rpx; background: rgba(255, 255, 255, 0.40); }
 .ambient-b { width: 420rpx; height: 420rpx; left: -180rpx; top: 460rpx; background: var(--theme-accent-ambient); }
 
-/* 统一缩进 32rpx */
 .fixed-header { flex-shrink: 0; padding: 24rpx 32rpx 0; position: relative; z-index: 10; }
 .header-wrap { position: relative; margin-bottom: 18rpx; }
 .header-actions { position: absolute; right: 12rpx; top: 16rpx; display: flex; gap: 12rpx; }
@@ -231,20 +228,14 @@ page { height: 100%; background: var(--theme-page-bg); }
 .type-item.active { color: var(--theme-primary); font-weight: 700; background: var(--theme-surface-strong); border-color: var(--theme-primary); box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08); }
 
 .scroll-content { flex: 1; width: 100%; min-height: 0; }
-.view-content-wrap {
-  padding: 0 32rpx; /* 统一左右缩进 32rpx */
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-}
+.view-content-wrap { padding: 0 32rpx; min-height: 100%; display: flex; flex-direction: column; }
 
-/* 核心动画 */
 .fade-in { animation: fadeIn 0.4s ease-out both; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(16rpx); } to { opacity: 1; transform: translateY(0); } }
 
-.add-fab { position: fixed; right: 28rpx; bottom: 34rpx; width: 108rpx; height: 108rpx; border-radius: 50%; background: var(--theme-fab-gradient); color: white; text-align: center; line-height: 108rpx; font-size: 68rpx; box-shadow: 0 18rpx 30rpx rgba(71, 126, 88, 0.25); z-index: 20; }
+.add-fab { position: fixed; right: 28rpx; bottom: 34rpx; width: 108rpx; height: 108rpx; border-radius: 50%; background: var(--theme-fab-gradient); color: #fff; text-align: center; line-height: 108rpx; font-size: 68rpx; box-shadow: 0 18rpx 30rpx rgba(71, 126, 88, 0.25); z-index: 20; }
 .backup-mask { position: fixed; inset: 0; z-index: 310; background: rgba(47, 53, 66, 0.56); display: flex; align-items: flex-end; }
-.backup-sheet { width: 100%; background: linear-gradient(180deg, #fff 0%, #f1f9f3 100%); border-radius: 42rpx 42rpx 0 0; padding: 34rpx 34rpx 40rpx; }
+.backup-sheet { width: 100%; background: linear-gradient(180deg, var(--theme-surface-strong) 0%, var(--theme-page-bg) 100%); border-radius: 42rpx 42rpx 0 0; padding: 34rpx 34rpx 40rpx; }
 .backup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18rpx; }
 .backup-title { font-size: 38rpx; font-weight: 700; }
 .backup-close { font-size: 40rpx; color: var(--theme-text-muted); padding: 8rpx 12rpx; }
@@ -253,6 +244,6 @@ page { height: 100%; background: var(--theme-page-bg); }
 .backup-card-title { display: block; font-size: 30rpx; font-weight: 700; margin-bottom: 8rpx; }
 .backup-card-subtitle { font-size: 22rpx; color: var(--theme-text-muted); }
 .backup-import-panel { display: flex; flex-direction: column; gap: 14rpx; }
-.backup-import-row { padding: 24rpx 22rpx; border-radius: 24rpx; border: 1rpx solid rgba(215, 232, 221, 0.95); background: #fff; font-weight: 700; }
+.backup-import-row { padding: 24rpx 22rpx; border-radius: 24rpx; border: 1rpx solid rgba(215, 232, 221, 0.95); background: var(--theme-surface-strong); font-weight: 700; }
 .backup-back { margin-top: 10rpx; text-align: center; color: var(--theme-primary); font-size: 24rpx; }
 </style>

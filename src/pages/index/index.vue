@@ -23,7 +23,7 @@ const toggleTheme = () => {
 
 const activeTab = ref<'list' | 'stats'>('list');
 const selectedMonth = ref(getCurrentMonthKey());
-const selectedType = ref<'expense' | 'income'>('expense'); // 仅保留支出和收入
+const selectedType = ref<'expense' | 'income'>('expense');
 const statMode = ref<'month' | 'year'>('month');
 
 const showAddModal = ref(false);
@@ -58,22 +58,13 @@ const displayedBills = computed(() => {
   return monthBills.value.filter((bill) => bill.type === selectedType.value);
 });
 
-// 核心：基于所有切换状态的 Key
 const viewKey = computed(() => {
   const base = activeTab.value === 'list' ? `list-${selectedType.value}` : `stats-${statMode.value}`;
   return `${base}-${selectedMonth.value}`;
 });
 
-const handleAddNew = () => {
-  editingBill.value = null;
-  showAddModal.value = true;
-};
-
-const handleEdit = (bill: Bill) => {
-  editingBill.value = bill;
-  showAddModal.value = true;
-};
-
+const handleAddNew = () => { editingBill.value = null; showAddModal.value = true; };
+const handleEdit = (bill: Bill) => { editingBill.value = bill; showAddModal.value = true; };
 const handleMonthChange = (event: any) => {
   const value = event?.detail?.value || '';
   if (value) selectedMonth.value = String(value).slice(0, 7);
@@ -142,6 +133,7 @@ const handleImportFile = () => {
     <view class="ambient ambient-a"></view>
     <view class="ambient ambient-b"></view>
 
+    <!-- 顶栏：左右缩进 32rpx -->
     <view class="fixed-header">
       <view class="header-wrap">
         <BillHeader
@@ -165,7 +157,6 @@ const handleImportFile = () => {
         <view :class="['switch-item', activeTab === 'stats' ? 'active' : '']" @click="activeTab = 'stats'">统计</view>
       </view>
 
-      <!-- 二级筛选器 -->
       <view class="type-switcher">
         <template v-if="activeTab === 'list'">
           <view :class="['type-item', selectedType === 'expense' ? 'active' : '']" @click="selectedType = 'expense'">支出</view>
@@ -179,7 +170,7 @@ const handleImportFile = () => {
     </view>
 
     <scroll-view class="scroll-content" scroll-y>
-      <!-- 强制触发淡入动画的容器 -->
+      <!-- 内容包裹层：左右缩进 32rpx -->
       <view :key="viewKey" class="view-content-wrap fade-in">
         <BillList v-if="activeTab === 'list'" :bills="displayedBills" @edit="handleEdit" />
         <StatsView v-else :all-bills="bills" :period-key="selectedMonth" :mode="statMode" />
@@ -225,7 +216,8 @@ page { height: 100%; background: var(--theme-page-bg); }
 .ambient-a { width: 360rpx; height: 360rpx; right: -120rpx; top: -90rpx; background: rgba(255, 255, 255, 0.40); }
 .ambient-b { width: 420rpx; height: 420rpx; left: -180rpx; top: 460rpx; background: var(--theme-accent-ambient); }
 
-.fixed-header { flex-shrink: 0; padding: 24rpx 24rpx 0; position: relative; z-index: 10; }
+/* 统一缩进 32rpx */
+.fixed-header { flex-shrink: 0; padding: 24rpx 32rpx 0; position: relative; z-index: 10; }
 .header-wrap { position: relative; margin-bottom: 18rpx; }
 .header-actions { position: absolute; right: 12rpx; top: 16rpx; display: flex; gap: 12rpx; }
 .header-btn { width: 68rpx; height: 68rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--theme-surface-strong); border: 1rpx solid rgba(133, 214, 158, 0.42); box-shadow: 0 10rpx 20rpx rgba(52, 101, 65, 0.08); color: var(--theme-primary); font-size: 28rpx; font-weight: 700; }
@@ -234,12 +226,17 @@ page { height: 100%; background: var(--theme-page-bg); }
 .switch-item { flex: 1; text-align: center; padding: 12rpx 0; font-size: 26rpx; color: var(--theme-text-muted); border-radius: 999rpx; transition: all 0.24s ease; }
 .switch-item.active { background: var(--theme-surface-strong); color: var(--theme-text); font-weight: 700; box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.05); }
 
-.type-switcher { display: flex; gap: 12rpx; margin-bottom: 18rpx; height: 72rpx; }
+.type-switcher { display: flex; gap: 16rpx; margin-bottom: 18rpx; height: 72rpx; }
 .type-item { flex: 1; text-align: center; line-height: 72rpx; font-size: 26rpx; color: var(--theme-text-muted); border-radius: 999rpx; background: var(--theme-surface); border: 1rpx solid var(--theme-border); transition: all 0.24s ease; }
 .type-item.active { color: var(--theme-primary); font-weight: 700; background: var(--theme-surface-strong); border-color: var(--theme-primary); box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08); }
 
 .scroll-content { flex: 1; width: 100%; min-height: 0; }
-.view-content-wrap { min-height: 100%; display: flex; flex-direction: column; }
+.view-content-wrap {
+  padding: 0 32rpx; /* 统一左右缩进 32rpx */
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
 /* 核心动画 */
 .fade-in { animation: fadeIn 0.4s ease-out both; }

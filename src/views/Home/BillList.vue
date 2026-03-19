@@ -228,10 +228,10 @@ const handleDelete = (id: number) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start; /* 改为靠上，通过 padding 控制位置 */
   flex: 1;
   min-height: 800rpx;
-  padding: 40rpx 0;
+  padding: 120rpx 0 40rpx; /* 增加顶部间距，使视觉中心上移 */
 }
 .empty-icon-wrap {
   position: relative;

@@ -25,6 +25,7 @@ const activeTab = ref<'list' | 'stats'>('list');
 const selectedMonth = ref(getCurrentMonthKey());
 const selectedType = ref<'expense' | 'income'>('expense');
 const statMode = ref<'month' | 'year'>('month');
+const sortMode = ref<'date' | 'amount'>('date');
 
 const showAddModal = ref(false);
 const showBackupModal = ref(false);
@@ -166,11 +167,23 @@ const handleImportFile = () => {
           <view :class="['type-item', statMode === 'year' ? 'active' : '']" @click="statMode = 'year'">年度(支出)</view>
         </template>
       </view>
+
+      <!-- 排序工具栏：压在列表上方的药丸 -->
+      <view v-if="activeTab === 'list'" class="list-toolbar-fixed">
+        <view class="toolbar-labels">
+          <text class="toolbar-title">排序方式</text>
+          <text class="toolbar-hint">当前：{{ sortMode === "date" ? "按日期" : "按金额" }}</text>
+        </view>
+        <view class="sort-toggle">
+          <view :class="['sort-pill', sortMode === 'date' ? 'active' : '']" @click="sortMode = 'date'">按日期</view>
+          <view :class="['sort-pill', sortMode === 'amount' ? 'active' : '']" @click="sortMode = 'amount'">按金额</view>
+        </view>
+      </view>
     </view>
 
     <scroll-view class="scroll-content" scroll-y>
       <view :key="viewKey" class="view-content-wrap fade-in">
-        <BillList v-if="activeTab === 'list'" :bills="displayedBills" @edit="handleEdit" />
+        <BillList v-if="activeTab === 'list'" :bills="displayedBills" :sort-mode="sortMode" @edit="handleEdit" />
         <StatsView v-else :all-bills="bills" :period-key="selectedMonth" :mode="statMode" />
       </view>
     </scroll-view>
@@ -214,7 +227,7 @@ page { height: 100%; background: var(--theme-page-bg); }
 .ambient-a { width: 360rpx; height: 360rpx; right: -120rpx; top: -90rpx; background: rgba(255, 255, 255, 0.40); }
 .ambient-b { width: 420rpx; height: 420rpx; left: -180rpx; top: 460rpx; background: var(--theme-accent-ambient); }
 
-.fixed-header { flex-shrink: 0; padding: 24rpx 32rpx 0; position: relative; z-index: 10; }
+.fixed-header { flex-shrink: 0; padding: 24rpx 32rpx 0; position: relative; z-index: 100; /* 提高整体头部层级 */ }
 .header-wrap { position: relative; margin-bottom: 18rpx; }
 .header-actions { position: absolute; right: 12rpx; top: 16rpx; display: flex; gap: 12rpx; }
 .header-btn { width: 68rpx; height: 68rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--theme-surface-strong); border: 1rpx solid rgba(133, 214, 158, 0.42); box-shadow: 0 10rpx 20rpx rgba(52, 101, 65, 0.08); color: var(--theme-primary); font-size: 28rpx; font-weight: 700; }
@@ -227,9 +240,38 @@ page { height: 100%; background: var(--theme-page-bg); }
 .type-item { flex: 1; text-align: center; line-height: 72rpx; font-size: 26rpx; color: var(--theme-text-muted); border-radius: 999rpx; background: var(--theme-surface); border: 1rpx solid var(--theme-border); transition: all 0.24s ease; }
 .type-item.active { color: var(--theme-primary); font-weight: 700; background: var(--theme-surface-strong); border-color: var(--theme-primary); box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08); }
 
+/* 排序栏固定样式：使用负的 margin-bottom 实现对列表的“压制” */
+.list-toolbar-fixed {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16rpx;
+  padding: 24rpx 32rpx;
+  background: var(--theme-surface-strong);
+  border-radius: 42rpx;
+  margin-top: 10rpx;
+  margin-bottom: -32rpx; /* 关键：负边距让列表向上抽取 */
+  position: relative;
+  z-index: 10; /* 确保药丸压在滚动内容上方 */
+}
+
+.toolbar-labels { display: flex; flex-direction: column; }
+.toolbar-title { font-size: 28rpx; font-weight: 700; color: var(--theme-text-muted); }
+.toolbar-hint { font-size: 22rpx; color: var(--theme-text-muted); margin-top: 2rpx; opacity: 0.7; }
+
+.sort-toggle { display: inline-flex; padding: 6rpx; border-radius: 999rpx; background: var(--theme-surface); border: 1rpx solid var(--theme-border); }
+.sort-pill { min-width: 110rpx; text-align: center; padding: 10rpx 16rpx; border-radius: 999rpx; font-size: 22rpx; color: var(--theme-text-muted); }
+.sort-pill.active { background: var(--theme-surface-strong); color: var(--theme-text); font-weight: 700; box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05); }
+
 .scroll-content { flex: 1; width: 100%; min-height: 0; }
 .view-content-wrap { padding: 0 32rpx; min-height: 100%; display: flex; flex-direction: column; }
 
+/* 列表卡片：取消圆角，并确保它被药丸压在下面 */
+/* 强制取消列表卡片的所有圆角 */
+.view-content-wrap:has(.list-content-card) .list-content-card {
+  border-radius: 0 !important;
+  margin-top: 0;
+}
 .fade-in { animation: fadeIn 0.4s ease-out both; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(16rpx); } to { opacity: 1; transform: translateY(0); } }
 

@@ -1,27 +1,5 @@
 <template>
-  <view class="list-section">
-    <!-- 顶部吸顶工具栏 -->
-    <view class="list-toolbar">
-      <view class="toolbar-labels">
-        <text class="toolbar-title">排序方式</text>
-        <text class="toolbar-hint"
-          >当前：{{ sortMode === "date" ? "按日期" : "按金额" }}</text
-        >
-      </view>
-      <view class="sort-toggle">
-        <view
-          :class="['sort-pill', sortMode === 'date' ? 'active' : '']"
-          @tap="sortMode = 'date'"
-          >按日期</view
-        >
-        <view
-          :class="['sort-pill', sortMode === 'amount' ? 'active' : '']"
-          @tap="sortMode = 'amount'"
-          >按金额</view
-        >
-      </view>
-    </view>
-
+  <view class="list-content-card">
     <view class="list-content-wrap">
       <!-- 空白页占位 -->
       <view v-if="sortedBills.length === 0" class="empty-placeholder">
@@ -59,13 +37,10 @@
                 <text class="bill-category">{{ bill.category }}</text>
                 <text class="bill-person-name">{{ bill.personName }}</text>
               </view>
-              <text class="bill-date"
-                >{{ bill.date }}{{ bill.note ? " · " + bill.note : "" }}</text
-              >
+              <text class="bill-date">{{ bill.date }}{{ bill.note ? " · " + bill.note : "" }}</text>
             </view>
             <view :class="['bill-amount', bill.type]">
-              {{ bill.type === "expense" ? "-" : "+"
-              }}{{ bill.amount.toFixed(2) }}
+              {{ bill.type === "expense" ? "-" : "+" }}{{ bill.amount.toFixed(2) }}
             </view>
           </view>
           <view class="delete-panel" @tap.stop="handleDelete(bill.id)">
@@ -82,11 +57,14 @@ import { computed, ref } from "vue";
 import { useBills } from "../../composables/useBills";
 import type { Bill } from "../../types";
 
-const props = defineProps<{ bills: Bill[] }>();
+const props = defineProps<{
+  bills: Bill[];
+  sortMode: "date" | "amount";
+}>();
+
 const emit = defineEmits<{ (e: "edit", bill: Bill): void }>();
 
 const { categories, removeBill } = useBills();
-const sortMode = ref<"date" | "amount">("date");
 const openBillId = ref<number | null>(null);
 const touchState = ref({
   id: null as number | null,
@@ -101,15 +79,10 @@ const swipeThreshold = 48;
 
 const sortedBills = computed(() => {
   const list = [...props.bills];
-  if (sortMode.value === "amount") {
-    return list.sort(
-      (a, b) =>
-        b.amount - a.amount || String(b.date).localeCompare(String(a.date)),
-    );
+  if (props.sortMode === "amount") {
+    return list.sort((a, b) => b.amount - a.amount || String(b.date).localeCompare(String(a.date)));
   }
-  return list.sort(
-    (a, b) => String(b.date).localeCompare(String(a.date)) || b.id - a.id,
-  );
+  return list.sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id - a.id);
 });
 
 const getIcon = (name: string) => {
@@ -118,14 +91,7 @@ const getIcon = (name: string) => {
 };
 
 const resetTouch = () => {
-  touchState.value = {
-    id: null,
-    startX: 0,
-    startY: 0,
-    offsetX: 0,
-    swiping: false,
-    locked: false,
-  };
+  touchState.value = { id: null, startX: 0, startY: 0, offsetX: 0, swiping: false, locked: false };
 };
 const closeSwipe = () => {
   openBillId.value = null;
@@ -142,14 +108,7 @@ const handleTouchStart = (event: any, id: number) => {
   const touch = event?.touches?.[0];
   if (!touch) return;
   if (openBillId.value !== null && openBillId.value !== id) closeSwipe();
-  touchState.value = {
-    id,
-    startX: touch.clientX,
-    startY: touch.clientY,
-    offsetX: 0,
-    swiping: false,
-    locked: false,
-  };
+  touchState.value = { id, startX: touch.clientX, startY: touch.clientY, offsetX: 0, swiping: false, locked: false };
 };
 const handleTouchMove = (event: any, id: number) => {
   if (touchState.value.id !== id) return;
@@ -166,8 +125,7 @@ const handleTouchMove = (event: any, id: number) => {
     touchState.value.swiping = true;
   }
   if (touchState.value.locked) return;
-  touchState.value.offsetX =
-    deltaX < 0 ? Math.max(deltaX, -revealWidth) : Math.min(deltaX, 0);
+  touchState.value.offsetX = deltaX < 0 ? Math.max(deltaX, -revealWidth) : Math.min(deltaX, 0);
 };
 const handleTouchEnd = (_event: any, id: number) => {
   if (touchState.value.id !== id) return;
@@ -183,8 +141,7 @@ const getSwipeStyle = (id: number) => {
       transition: touchState.value.swiping ? "none" : "transform 0.22s ease",
     };
   return {
-    transform:
-      openBillId.value === id ? "translateX(-168rpx)" : "translateX(0)",
+    transform: openBillId.value === id ? "translateX(-168rpx)" : "translateX(0)",
     transition: "transform 0.22s ease",
   };
 };
@@ -195,28 +152,17 @@ const handleDelete = (id: number) => {
 </script>
 
 <style scoped>
-.list-section {
+/* 内容卡片层：完全扁平化，移除圆角和边框 */
+.list-content-card {
   background: var(--theme-card-gradient);
-  border: 1rpx solid var(--theme-border);
-  border-radius: 42rpx;
+  border: none;
+  border-radius: 0;
   position: relative;
 }
 
-.list-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16rpx;
-  padding: 32rpx 24rpx 24rpx;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: var(--theme-surface-strong);
-  border-radius: 42rpx 42rpx 0 0;
-}
-
 .list-content-wrap {
-  padding: 0 20rpx 32rpx;
+  /* 增加顶部内边距，补偿上方药丸压下来的部分 */
+  padding: 48rpx 24rpx 32rpx;
 }
 
 .bill-swipe {
@@ -239,13 +185,10 @@ const handleDelete = (id: number) => {
   padding: 28rpx 24rpx;
   border: 1rpx solid var(--theme-border);
   border-radius: 32rpx;
-  /* 使用 surface 变量，它通常是带透明度的，能更好地与背景融合 */
-  background: var(--theme-surface);
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.01);
+  background: transparent;
 }
 .bill-item:active {
-  transform: scale(0.995);
-  background: var(--theme-surface-strong);
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .delete-panel {
@@ -261,44 +204,6 @@ const handleDelete = (id: number) => {
   color: #ffffff;
   font-size: 28rpx;
   font-weight: 700;
-}
-
-.toolbar-labels {
-  display: flex;
-  flex-direction: column;
-}
-.toolbar-title {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: var(--theme-text-muted);
-}
-.toolbar-hint {
-  font-size: 22rpx;
-  color: var(--theme-text-muted);
-  margin-top: 2rpx;
-  opacity: 0.7;
-}
-
-.sort-toggle {
-  display: inline-flex;
-  padding: 6rpx;
-  border-radius: 999rpx;
-  background: var(--theme-surface);
-  border: 1rpx solid var(--theme-border);
-}
-.sort-pill {
-  min-width: 110rpx;
-  text-align: center;
-  padding: 10rpx 16rpx;
-  border-radius: 999rpx;
-  font-size: 22rpx;
-  color: var(--theme-text-muted);
-}
-.sort-pill.active {
-  background: var(--theme-surface-strong);
-  color: var(--theme-text);
-  font-weight: 700;
-  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .empty-placeholder {
@@ -388,7 +293,6 @@ const handleDelete = (id: number) => {
   right: -6rpx;
   width: 38rpx;
   height: 38rpx;
-  /* 替换纯白为 surface-strong */
   background: var(--theme-surface-strong);
   border-radius: 50%;
   display: flex;

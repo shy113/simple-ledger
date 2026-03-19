@@ -17,7 +17,12 @@
           class="cat-manage-item"
         >
           <text>{{ cat.icon }} {{ cat.name }}</text>
-          <text class="del-btn" @click="removeCategory(type, idx)">删除</text>
+          <text
+            v-if="isCategoryDeletable(type, cat.name)"
+            class="del-btn"
+            @click="removeCategory(type, idx)"
+            >删除</text
+          >
         </view>
       </view>
       <view class="add-form-box">
@@ -56,7 +61,12 @@
       <view class="cat-list-scroll">
         <view v-for="(p, idx) in persons" :key="idx" class="cat-manage-item">
           <text>{{ p.avatar }} {{ p.name }}</text>
-          <text class="del-btn" @click="removePerson(idx)">删除</text>
+          <text
+            v-if="isPersonDeletable(p.name)"
+            class="del-btn"
+            @click="removePerson(idx)"
+            >删除</text
+          >
         </view>
       </view>
       <view class="add-form-box">
@@ -99,6 +109,8 @@ const {
   removeCategory,
   addPerson,
   removePerson,
+  isCategoryDeletable,
+  isPersonDeletable,
 } = useBills();
 
 const newCat = ref({ name: "", icon: "🧩" });

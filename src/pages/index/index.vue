@@ -190,7 +190,12 @@ const handleImportFile = () => {
 
     <view class="add-fab" @click="handleAddNew">+</view>
 
-    <AddBillModal v-model="showAddModal" :editData="editingBill" @manage-cat="showCatManager = true" @manage-person="showPersonManager = true" />
+    <AddBillModal
+      v-model="showAddModal"
+      :editData="editingBill"
+      @manage-cat="(t) => { selectedType = t; showCatManager = true; }"
+      @manage-person="showPersonManager = true"
+    />
 
     <view v-if="showBackupModal" class="backup-mask" @click="closeBackupModal" @touchmove.stop.prevent>
       <view class="backup-sheet" @click.stop>
@@ -216,7 +221,11 @@ const handleImportFile = () => {
       </view>
     </view>
 
-    <ManagementModals v-model:showCat="showCatManager" v-model:showPerson="showPersonManager" type="expense" />
+    <ManagementModals
+      v-model:showCat="showCatManager"
+      v-model:showPerson="showPersonManager"
+      :type="selectedType"
+    />
   </view>
 </template>
 

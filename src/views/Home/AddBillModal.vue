@@ -76,7 +76,7 @@
         <view class="section-box">
           <view class="section-header-inline">
             <text class="section-label">选择分类</text>
-            <text class="manage-btn" @click="$emit('manage-cat')">📂+</text>
+            <text class="manage-btn" @click="$emit('manage-cat', form.type)">📂+</text>
           </view>
           <scroll-view scroll-x class="scroll-x" :enhanced="true" :show-scrollbar="false">
             <view class="flex-row">
@@ -165,7 +165,7 @@ const resetToNew = () => {
   form.value.note = "";
   form.value.type = "expense";
   form.value.category = categories.value.expense[0]?.name || "其他";
-  const firstPerson = persons.value[0] || { name: "本人", avatar: "🧑" };
+  const firstPerson = persons.value[0] || { name: "本人", avatar: "😊" };
   form.value.personName = firstPerson.name;
   form.value.personAvatar = firstPerson.avatar;
 };

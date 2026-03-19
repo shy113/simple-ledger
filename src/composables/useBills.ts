@@ -27,7 +27,7 @@ const defaultCategories: Record<'expense' | 'income', Category[]> = {
 };
 
 const defaultPersons: Person[] = [
-  { name: '本人', avatar: '🧑' },
+  { name: '本人', avatar: '😊' },
   { name: '家人', avatar: '👨‍👩‍👧‍👦' },
   { name: '朋友', avatar: '🤝' },
 ];
@@ -38,32 +38,6 @@ const categories = ref<Record<'expense' | 'income', Category[]>>({
   income: [...defaultCategories.income],
 });
 const persons = ref<Person[]>([...defaultPersons]);
-
-const normalizeCategories = (items: Category[], defaults: Category[]) => {
-  const otherItem = items.find((item) => item.name === '其他');
-  const rest = items.filter((item) => item.name !== '其他');
-  const missingDefaults = defaults.filter((item) => !items.some((cat) => cat.name === item.name && cat.icon === item.icon));
-  const combined = [...rest, ...missingDefaults.filter((item) => item.name !== '其他')];
-
-  if (otherItem) {
-    combined.push(otherItem);
-  } else {
-    const otherDefault = defaults.find((item) => item.name === '其他');
-    if (otherDefault) combined.push(otherDefault);
-  }
-
-  return combined;
-};
-
-const mergeMissingCategories = (loaded: Record<'expense' | 'income', Category[]>) => ({
-  expense: normalizeCategories(loaded.expense, defaultCategories.expense),
-  income: normalizeCategories(loaded.income, defaultCategories.income),
-});
-
-const mergeMissingPersons = (loaded: Person[]) => {
-  const missing = defaultPersons.filter((item) => !loaded.some((person) => person.name === item.name));
-  return missing.length ? [...loaded, ...missing] : loaded;
-};
 
 const sanitizeBill = (item: any): Bill | null => {
   if (!item || typeof item !== 'object') return null;
@@ -76,7 +50,7 @@ const sanitizeBill = (item: any): Bill | null => {
     type,
     category: String(item.category ?? '其他'),
     personName: String(item.personName ?? '本人'),
-    personAvatar: String(item.personAvatar ?? '🧑'),
+    personAvatar: String(item.personAvatar ?? '😊'),
     date: String(item.date ?? getTodayDateString()),
     note: String(item.note ?? ''),
   };
@@ -123,27 +97,40 @@ export function useBills() {
   };
 
   const initData = () => {
+    // 账单加载
     const b = uni.getStorageSync('my_bills');
-    bills.value = b ? JSON.parse(b) : [];
-
-    const c = uni.getStorageSync('my_categories');
-    if (c) {
-      const loaded = JSON.parse(c) as Record<'expense' | 'income', Category[]>;
-      const merged = mergeMissingCategories(loaded);
-      categories.value = merged;
-      if (JSON.stringify(merged) !== JSON.stringify(loaded)) {
+    if (b) {
+      bills.value = JSON.parse(b);
+    } else {
+      bills.value = [];
+      // 如果没有账单，且没有任何分类/成员记录，说明是全新用户，初始化默认值
+      if (!uni.getStorageSync('my_categories') && !uni.getStorageSync('my_persons')) {
         sync();
       }
     }
 
+    // 分类加载：如果存储里有，就用存储的；否则用默认的
+    const c = uni.getStorageSync('my_categories');
+    if (c) {
+      categories.value = JSON.parse(c);
+    } else {
+      categories.value = {
+        expense: [...defaultCategories.expense],
+        income: [...defaultCategories.income],
+      };
+    }
+
+    // 成员加载：如果存储里有，就用存储的；否则用默认的
     const p = uni.getStorageSync('my_persons');
     if (p) {
-      const loaded = JSON.parse(p) as Person[];
-      const merged = mergeMissingPersons(loaded);
-      persons.value = merged;
-      if (JSON.stringify(merged) !== JSON.stringify(loaded)) {
-        sync();
-      }
+      persons.value = JSON.parse(p);
+    } else {
+      persons.value = [...defaultPersons];
+    }
+
+    // 如果是初次运行，同步一次以确保存储中有基础数据
+    if (!c || !p) {
+      sync();
     }
   };
 
@@ -177,12 +164,36 @@ export function useBills() {
     const nextPersons = sanitizePersonList(payload?.persons);
 
     bills.value = nextBills;
-    categories.value = mergeMissingCategories({
+    categories.value = {
       expense: sanitizeCategoryList(nextCategories.expense),
       income: sanitizeCategoryList(nextCategories.income),
-    });
-    persons.value = mergeMissingPersons(nextPersons);
+    };
+    persons.value = nextPersons;
     sync();
+  };
+
+  const isCategoryDeletable = (type: 'expense' | 'income', categoryName: string) => {
+    // 检查是否为默认分类
+    const isDefault = defaultCategories[type].some((cat) => cat.name === categoryName);
+    if (isDefault) return false;
+
+    // 检查是否已被账单使用
+    const isUsed = bills.value.some((bill) => bill.type === type && bill.category === categoryName);
+    if (isUsed) return false;
+
+    return true;
+  };
+
+  const isPersonDeletable = (personName: string) => {
+    // 检查是否为默认成员
+    const isDefault = defaultPersons.some((p) => p.name === personName);
+    if (isDefault) return false;
+
+    // 检查是否已被账单使用
+    const isUsed = bills.value.some((bill) => bill.personName === personName);
+    if (isUsed) return false;
+
+    return true;
   };
 
   return {
@@ -197,6 +208,8 @@ export function useBills() {
     sync,
     exportBackupData,
     restoreBackupData,
+    isCategoryDeletable,
+    isPersonDeletable,
     addBill: (bill: Omit<Bill, 'id'>) => {
       bills.value.push({
         ...bill,
@@ -218,6 +231,19 @@ export function useBills() {
     },
     addCategory,
     removeCategory: (type: 'expense' | 'income', index: number) => {
+      const category = categories.value[type][index];
+      if (!category) return;
+
+      if (defaultCategories[type].some((c) => c.name === category.name)) {
+        uni.showToast({ title: '默认分类不可删除', icon: 'none' });
+        return;
+      }
+
+      if (bills.value.some((b) => b.type === type && b.category === category.name)) {
+        uni.showToast({ title: '该分类已有账单，不可删除', icon: 'none' });
+        return;
+      }
+
       categories.value[type].splice(index, 1);
       sync();
     },
@@ -228,6 +254,19 @@ export function useBills() {
       }
     },
     removePerson: (index: number) => {
+      const person = persons.value[index];
+      if (!person) return;
+
+      if (defaultPersons.some((p) => p.name === person.name)) {
+        uni.showToast({ title: '默认成员不可删除', icon: 'none' });
+        return;
+      }
+
+      if (bills.value.some((b) => b.personName === person.name)) {
+        uni.showToast({ title: '该成员已有账单，不可删除', icon: 'none' });
+        return;
+      }
+
       persons.value.splice(index, 1);
       sync();
     },

@@ -16,115 +16,128 @@
       </view>
     </view>
 
-    <!-- 2. 年度特有视图 -->
-    <view v-if="statMode === 'year'">
-      <!-- ① 年度关键词看板 (Annual Insights) -->
-      <view class="insights-grid">
-        <view class="insight-card">
-          <view class="insight-icon">🔥</view>
-          <view class="insight-content">
-            <text class="insight-label">月度最高</text>
-            <text class="insight-value">{{ insights.maxMonth.month }}月</text>
-            <text class="insight-desc">¥{{ insights.maxMonth.amount.toFixed(0) }}</text>
-          </view>
-        </view>
-        <view class="insight-card">
-          <view class="insight-icon">🎯</view>
-          <view class="insight-content">
-            <text class="insight-label">最常消费</text>
-            <text class="insight-value">{{ insights.topCategory.name }}</text>
-            <text class="insight-desc">占比 {{ insights.topCategory.percent.toFixed(0) }}%</text>
-          </view>
-        </view>
-        <view class="insight-card">
-          <view class="insight-icon">🍃</view>
-          <view class="insight-content">
-            <text class="insight-label">勤俭节约</text>
-            <text class="insight-value">{{ insights.minMonth.month }}月</text>
-            <text class="insight-desc">¥{{ insights.minMonth.amount.toFixed(0) }}</text>
-          </view>
-        </view>
-      </view>
-
-      <!-- ② 年度趋势图 (Trend Chart) -->
-      <view class="stats-card">
-        <view class="card-head">年度趋势</view>
-        <view class="chart-container">
-          <view
-            v-for="item in monthlyTrend"
-            :key="item.month"
-            class="chart-bar-wrap"
-          >
-            <view class="bar-outer">
-              <view
-                class="bar-inner"
-                :class="{ 'is-max': item.isMax }"
-                :style="{ height: item.height + '%' }"
-              >
-                <text v-if="item.isMax && item.amount > 0" class="bar-tooltip">¥{{ item.amount.toFixed(0) }}</text>
-              </view>
+    <!-- 2. 数据展示区 -->
+    <block v-if="totalExpense > 0">
+      <!-- A. 年度特有视图 -->
+      <view v-if="statMode === 'year'" class="fade-in">
+        <!-- ① 年度关键词看板 -->
+        <view class="insights-grid">
+          <view class="insight-card">
+            <view class="insight-icon">🔥</view>
+            <view class="insight-content">
+              <text class="insight-label">月度最高</text>
+              <text class="insight-value">{{ insights.maxMonth.month }}月</text>
+              <text class="insight-desc">¥{{ insights.maxMonth.amount.toFixed(0) }}</text>
             </view>
-            <text class="bar-label">{{ item.month }}月</text>
+          </view>
+          <view class="insight-card">
+            <view class="insight-icon">🎯</view>
+            <view class="insight-content">
+              <text class="insight-label">最常消费</text>
+              <text class="insight-value">{{ insights.topCategory.name }}</text>
+              <text class="insight-desc">占比 {{ insights.topCategory.percent.toFixed(0) }}%</text>
+            </view>
+          </view>
+          <view class="insight-card">
+            <view class="insight-icon">🍃</view>
+            <view class="insight-content">
+              <text class="insight-label">勤俭节约</text>
+              <text class="insight-value">{{ insights.minMonth.month }}月</text>
+              <text class="insight-desc">¥{{ insights.minMonth.amount.toFixed(0) }}</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- ② 年度趋势图 -->
+        <view class="stats-card">
+          <view class="card-head">年度趋势</view>
+          <view class="chart-container">
+            <view
+              v-for="item in monthlyTrend"
+              :key="item.month"
+              class="chart-bar-wrap"
+            >
+              <view class="bar-outer">
+                <view
+                  class="bar-inner"
+                  :class="{ 'is-max': item.isMax }"
+                  :style="{ height: item.height + '%' }"
+                >
+                  <text v-if="item.isMax && item.amount > 0" class="bar-tooltip">¥{{ item.amount.toFixed(0) }}</text>
+                </view>
+              </view>
+              <text class="bar-label">{{ item.month }}月</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- ③ 月度摘要列表 -->
+        <view class="stats-card">
+          <view class="card-head">月度摘要</view>
+          <view
+            v-for="item in monthlyTrend.filter(i => i.amount > 0).slice().reverse()"
+            :key="item.month"
+            class="stat-line"
+          >
+            <view class="line-info">
+              <text class="item-name">{{ item.month }}月</text>
+              <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
+            </view>
+            <view class="progress-bar">
+              <view class="progress-fill expense-bg" :style="{ width: (item.amount / insights.totalYearExpense * 100) + '%' }"></view>
+            </view>
           </view>
         </view>
       </view>
 
-      <!-- ③ 月度摘要列表 (Monthly Summary List) -->
-      <view class="stats-card">
-        <view class="card-head">月度摘要</view>
-        <view v-if="monthlyTrend.filter(i => i.amount > 0).length === 0" class="empty-stats">暂无年度数据</view>
+      <!-- B. 通用排行视图 (自动适配月/年) -->
+      <view class="stats-card fade-in">
+        <view class="card-head">分类排行</view>
         <view
-          v-for="item in monthlyTrend.filter(i => i.amount > 0).slice().reverse()"
-          :key="item.month"
-          class="stat-line"
+          v-for="item in categoryStats"
+          :key="item.name"
+          class="stat-line clickable"
+          @click="openDetail('category', item.name)"
         >
           <view class="line-info">
-            <text class="item-name">{{ item.month }}月</text>
+            <text class="item-name">{{ item.icon }} {{ item.name }}</text>
             <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
           </view>
           <view class="progress-bar">
-            <view class="progress-fill expense-bg" :style="{ width: (item.amount / insights.totalYearExpense * 100) + '%' }"></view>
+            <view class="progress-fill expense-bg" :style="{ width: item.percent + '%' }"></view>
           </view>
         </view>
       </view>
-    </view>
 
-    <!-- 3. 通用排行视图 (自动适配月/年) -->
-    <view class="stats-card">
-      <view class="card-head">分类排行</view>
-      <view v-if="categoryStats.length === 0" class="empty-stats">暂无数据</view>
-      <view
-        v-for="item in categoryStats"
-        :key="item.name"
-        class="stat-line clickable"
-        @click="openDetail('category', item.name)"
-      >
-        <view class="line-info">
-          <text class="item-name">{{ item.icon }} {{ item.name }}</text>
-          <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
-        </view>
-        <view class="progress-bar">
-          <view class="progress-fill expense-bg" :style="{ width: item.percent + '%' }"></view>
+      <view class="stats-card fade-in">
+        <view class="card-head">成员排行</view>
+        <view
+          v-for="item in memberStats"
+          :key="item.name"
+          class="stat-line clickable"
+          @click="openDetail('person', item.name)"
+        >
+          <view class="line-info">
+            <text class="item-name">{{ item.avatar }} {{ item.name }}</text>
+            <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
+          </view>
+          <view class="progress-bar">
+            <view class="progress-fill member-bg" :style="{ width: item.percent + '%' }"></view>
+          </view>
         </view>
       </view>
-    </view>
+    </block>
 
-    <view class="stats-card">
-      <view class="card-head">成员排行</view>
-      <view v-if="memberStats.length === 0" class="empty-stats">暂无数据</view>
-      <view
-        v-for="item in memberStats"
-        :key="item.name"
-        class="stat-line clickable"
-        @click="openDetail('person', item.name)"
-      >
-        <view class="line-info">
-          <text class="item-name">{{ item.avatar }} {{ item.name }}</text>
-          <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
-        </view>
-        <view class="progress-bar">
-          <view class="progress-fill member-bg" :style="{ width: item.percent + '%' }"></view>
-        </view>
+    <!-- 3. 空白页占位 (到底设计) -->
+    <view v-else class="empty-placeholder-card fade-in">
+      <view class="empty-icon-wrap">
+        <text class="empty-emoji">📝</text>
+        <view class="empty-circle"></view>
+      </view>
+      <text class="empty-title">暂无支出记录</text>
+      <text class="empty-tips">在这个{{ statMode === 'year' ? '年' : '月' }}份，你还没有记过账呢</text>
+      <view class="empty-footer">
+        <text>保持记录，是为了更好地生活</text>
       </view>
     </view>
   </view>
@@ -140,32 +153,26 @@ const props = defineProps<{ allBills: Bill[]; periodKey: string }>();
 
 const { categories, persons } = useBills();
 
-// 统计维度状态：'month' | 'year'
+// 统计维度状态
 const statMode = ref<'month' | 'year'>('month');
 
-// 计算当前选择的年份
 const currentYear = computed(() => props.periodKey.split('-')[0]);
 
-// 过滤出当前年份的所有账单
 const yearBills = computed(() => {
   return props.allBills.filter(bill => String(bill.date).startsWith(currentYear.value));
 });
 
-// 过滤出当前月份的所有账单
 const monthBills = computed(() => {
   return props.allBills.filter(bill => getMonthKeyFromDate(String(bill.date)) === props.periodKey);
 });
 
-// 根据模式选择账单数据
 const currentBills = computed(() => {
   return statMode.value === 'month' ? monthBills.value : yearBills.value;
 });
 
-// 账单过滤 (由于统计聚焦在支出，这里默认处理支出类型)
 const expenseBills = computed(() => currentBills.value.filter((bill) => bill.type === 'expense'));
 const totalExpense = computed(() => expenseBills.value.reduce((sum, bill) => sum + bill.amount, 0));
 
-// 12 个月的趋势计算
 const monthlyTrend = computed(() => {
   const year = currentYear.value;
   const trend = [];
@@ -189,29 +196,17 @@ const monthlyTrend = computed(() => {
     if (maxAmount > 0 && item.amount > 0) {
       height = Math.max(4, (item.amount / maxAmount) * 100);
     }
-    return {
-      ...item,
-      height,
-      isMax: maxAmount > 0 && item.amount === maxAmount
-    };
+    return { ...item, height, isMax: maxAmount > 0 && item.amount === maxAmount };
   });
 });
 
-// 年度看板数据
 const insights = computed(() => {
   const trend = monthlyTrend.value;
   const totalYearExpense = trend.reduce((sum, item) => sum + item.amount, 0);
-  
-  // 支出最高月
   const maxMonth = [...trend].sort((a, b) => b.amount - a.amount)[0];
-  
-  // 支出最低月 (有支出的月份中)
   const activeMonths = trend.filter(item => item.amount > 0);
-  const minMonth = activeMonths.length > 0 
-    ? [...activeMonths].sort((a, b) => a.amount - b.amount)[0] 
-    : trend[0];
+  const minMonth = activeMonths.length > 0 ? [...activeMonths].sort((a, b) => a.amount - b.amount)[0] : trend[0];
 
-  // 最常消费分类
   const catMap: Record<string, number> = {};
   yearBills.value.filter(b => b.type === 'expense').forEach(b => {
     catMap[b.category] = (catMap[b.category] || 0) + b.amount;
@@ -230,38 +225,32 @@ const insights = computed(() => {
   };
 });
 
-// 分类排行
 const categoryStats = computed(() => {
   if (totalExpense.value === 0) return [];
   const statsMap: Record<string, number> = {};
   expenseBills.value.forEach((bill) => {
     statsMap[bill.category] = (statsMap[bill.category] || 0) + bill.amount;
   });
-  return Object.keys(statsMap)
-    .map((name) => ({
-      name,
-      icon: categories.value.expense.find((cat) => cat.name === name)?.icon || '📒',
-      amount: statsMap[name],
-      percent: (statsMap[name] / totalExpense.value) * 100,
-    }))
-    .sort((a, b) => b.amount - a.amount);
+  return Object.keys(statsMap).map((name) => ({
+    name,
+    icon: categories.value.expense.find((cat) => cat.name === name)?.icon || '📒',
+    amount: statsMap[name],
+    percent: (statsMap[name] / totalExpense.value) * 100,
+  })).sort((a, b) => b.amount - a.amount);
 });
 
-// 成员排行
 const memberStats = computed(() => {
   if (totalExpense.value === 0) return [];
   const statsMap: Record<string, number> = {};
   expenseBills.value.forEach((bill) => {
     statsMap[bill.personName] = (statsMap[bill.personName] || 0) + bill.amount;
   });
-  return Object.keys(statsMap)
-    .map((name) => ({
-      name,
-      avatar: persons.value.find((person) => person.name === name)?.avatar || '👤',
-      amount: statsMap[name],
-      percent: (statsMap[name] / totalExpense.value) * 100,
-    }))
-    .sort((a, b) => b.amount - a.amount);
+  return Object.keys(statsMap).map((name) => ({
+    name,
+    avatar: persons.value.find((person) => person.name === name)?.avatar || '👤',
+    amount: statsMap[name],
+    percent: (statsMap[name] / totalExpense.value) * 100,
+  })).sort((a, b) => b.amount - a.amount);
 });
 
 const openDetail = (kind: 'category' | 'person', name: string) => {
@@ -273,128 +262,68 @@ const openDetail = (kind: 'category' | 'person', name: string) => {
 <style scoped>
 .stats-container { padding-bottom: 40rpx; }
 
-/* 维度切换 */
-.mode-toggle {
-  display: flex;
-  gap: 12rpx;
-  margin-bottom: 30rpx;
-}
-.mode-item {
-  flex: 1;
-  text-align: center;
-  padding: 16rpx 0;
-  font-size: 26rpx;
-  color: var(--theme-text-muted);
-  border-radius: 999rpx;
-  background: var(--theme-surface);
-  border: 1rpx solid var(--theme-border);
-  transition: all 0.24s ease;
-}
-.mode-item.active {
-  color: var(--theme-primary);
-  font-weight: 700;
-  background: var(--theme-surface-strong);
-  border-color: var(--theme-primary);
-  box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08);
+/* 动画 */
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10rpx); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* 年度看板 */
-.insights-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16rpx;
-  margin-bottom: 30rpx;
-}
-.insight-card {
-  background: var(--theme-insight-card-bg);
+/* 维度切换 */
+.mode-toggle { display: flex; gap: 12rpx; margin-bottom: 30rpx; }
+.mode-item { flex: 1; text-align: center; padding: 16rpx 0; font-size: 26rpx; color: var(--theme-text-muted); border-radius: 999rpx; background: var(--theme-surface); border: 1rpx solid var(--theme-border); transition: all 0.24s ease; }
+.mode-item.active { color: var(--theme-primary); font-weight: 700; background: var(--theme-surface-strong); border-color: var(--theme-primary); box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08); }
+
+/* 空白页占位 (到底设计) */
+.empty-placeholder-card {
+  flex: 1; /* 自动占据剩余高度 */
+  min-height: 400rpx; /* 设一个较小的保底值 */
+  background: var(--theme-card-gradient);
   border: 1rpx solid var(--theme-border);
-  border-radius: 28rpx;
-  padding: 20rpx 10rpx;
+  border-radius: 48rpx;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  backdrop-filter: blur(10px);
-}
-.insight-icon {
-  width: 64rpx;
-  height: 64rpx;
-  background: var(--theme-insight-icon-bg);
-  border-radius: 50%;
-  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
-  margin-bottom: 12rpx;
+  padding: 60rpx 40rpx;
+  box-shadow: var(--theme-card-shadow);
+  backdrop-filter: blur(20rpx);
 }
-.insight-content {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
+.empty-icon-wrap { position: relative; width: 200rpx; height: 200rpx; display: flex; align-items: center; justify-content: center; margin-bottom: 40rpx; }
+.empty-emoji { font-size: 100rpx; z-index: 2; }
+.empty-circle { position: absolute; width: 140rpx; height: 140rpx; background: var(--theme-primary-soft); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 0.2; }
+  100% { transform: scale(0.95); opacity: 0.5; }
 }
-.insight-label { font-size: 20rpx; color: var(--theme-text-muted); margin-bottom: 4rpx; }
-.insight-value { font-size: 26rpx; font-weight: 700; color: var(--theme-text); }
-.insight-desc { font-size: 20rpx; color: var(--theme-text-muted); margin-top: 2rpx; }
+.empty-title { font-size: 36rpx; font-weight: 700; color: var(--theme-text); margin-bottom: 16rpx; }
+.empty-tips { font-size: 26rpx; color: var(--theme-text-muted); margin-bottom: 80rpx; }
+.empty-footer { border-top: 1rpx solid var(--theme-border); padding-top: 40rpx; width: 80%; text-align: center; }
+.empty-footer text { font-size: 22rpx; color: var(--theme-text-muted); letter-spacing: 2rpx; font-style: italic; }
 
-/* 趋势图 */
-.chart-container {
-  height: 240rpx;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding: 40rpx 10rpx 10rpx;
-}
-.chart-bar-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100%;
-}
-.bar-outer {
-  width: 24rpx;
-  height: 160rpx;
-  background: #f0f2f5;
-  border-radius: 999rpx;
-  display: flex;
-  align-items: flex-end;
-  position: relative;
-  overflow: visible;
-}
-.bar-inner {
-  width: 100%;
-  background-color: var(--theme-primary);
-  border-radius: 999rpx;
-  transition: height 1s cubic-bezier(0.165, 0.84, 0.44, 1);
-  position: relative;
-  opacity: 0.3;
-}
-.bar-inner.is-max {
-  opacity: 1;
-  background-color: var(--theme-primary);
-}
-.bar-tooltip {
-  position: absolute;
-  top: -40rpx;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 20rpx;
-  color: var(--theme-primary);
-  white-space: nowrap;
-  font-weight: 700;
-  z-index: 5;
-}
-.bar-label {
-  font-size: 18rpx;
-  color: var(--theme-text-muted);
-  margin-top: 12rpx;
-}
+/* 趋势图与看板 */
+.insights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; margin-bottom: 30rpx; }
+.insight-card { background: var(--theme-insight-card-bg); border: 1rpx solid var(--theme-border); border-radius: 28rpx; padding: 20rpx 10rpx; display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(10px); }
+.insight-icon { width: 64rpx; height: 64rpx; background: var(--theme-insight-icon-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32rpx; margin-bottom: 12rpx; }
+.insight-content { text-align: center; }
+.insight-label { font-size: 20rpx; color: var(--theme-text-muted); margin-bottom: 4rpx; display: block; }
+.insight-value { font-size: 26rpx; font-weight: 700; color: var(--theme-text); }
+.insight-desc { font-size: 20rpx; color: var(--theme-text-muted); margin-top: 2rpx; display: block; }
+
+.chart-container { height: 240rpx; display: flex; align-items: flex-end; justify-content: space-between; padding: 40rpx 10rpx 10rpx; }
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.bar-outer { width: 24rpx; height: 160rpx; background: #f0f2f5; border-radius: 999rpx; display: flex; align-items: flex-end; position: relative; }
+.bar-inner { width: 100%; background-color: var(--theme-primary); border-radius: 999rpx; transition: height 1s cubic-bezier(0.165, 0.84, 0.44, 1); position: relative; opacity: 0.3; }
+.bar-inner.is-max { opacity: 1; background-color: var(--theme-primary); }
+.bar-tooltip { position: absolute; top: -40rpx; left: 50%; transform: translateX(-50%); font-size: 20rpx; color: var(--theme-primary); white-space: nowrap; font-weight: 700; z-index: 5; }
+.bar-label { font-size: 18rpx; color: var(--theme-text-muted); margin-top: 12rpx; }
 
 /* 通用卡片与排行 */
 .stats-card { background: var(--theme-card-gradient); border: 1rpx solid var(--theme-border); border-radius: 36rpx; padding: 34rpx 30rpx; margin-bottom: 24rpx; box-shadow: var(--theme-card-shadow); backdrop-filter: blur(18rpx); }
 .card-head { font-size: 28rpx; font-weight: 700; color: var(--theme-text-muted); margin-bottom: 24rpx; letter-spacing: 0.02em; }
 .stat-line { margin-bottom: 24rpx; padding: 14rpx 14rpx 16rpx; border-radius: 22rpx; }
 .stat-line:last-child { margin-bottom: 0; }
-.clickable { transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease; }
 .clickable:active { transform: scale(0.995); opacity: 0.95; background: var(--theme-primary-soft); }
 .line-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10rpx; }
 .item-name { font-size: 30rpx; color: var(--theme-text); font-weight: 700; }
@@ -403,5 +332,4 @@ const openDetail = (kind: 'category' | 'person', name: string) => {
 .progress-fill { height: 100%; border-radius: 999rpx; transition: width 0.6s ease; }
 .expense-bg { background: linear-gradient(90deg, var(--theme-expense) 0%, var(--theme-expense-soft) 100%); }
 .member-bg { background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-primary-soft) 100%); }
-.empty-stats { text-align: center; padding: 36rpx 22rpx; color: var(--theme-text-muted); font-size: 28rpx; }
 </style>

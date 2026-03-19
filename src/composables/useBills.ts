@@ -135,13 +135,17 @@ export function useBills() {
   };
 
   const addCategory = (type: 'expense' | 'income', cat: Category) => {
-    const list = categories.value[type];
+    const list = [...categories.value[type]];
     const otherIndex = list.findIndex((item) => item.name === '其他');
     if (otherIndex === -1) {
       list.push(cat);
     } else {
       list.splice(otherIndex, 0, cat);
     }
+    categories.value = {
+      ...categories.value,
+      [type]: list,
+    };
     sync();
   };
 
@@ -196,6 +200,14 @@ export function useBills() {
     return true;
   };
 
+  const isCategoryDefault = (type: 'expense' | 'income', categoryName: string) => {
+    return defaultCategories[type].some((cat) => cat.name === categoryName);
+  };
+
+  const isPersonDefault = (personName: string) => {
+    return defaultPersons.some((p) => p.name === personName);
+  };
+
   return {
     bills,
     categories,
@@ -210,6 +222,8 @@ export function useBills() {
     restoreBackupData,
     isCategoryDeletable,
     isPersonDeletable,
+    isCategoryDefault,
+    isPersonDefault,
     addBill: (bill: Omit<Bill, 'id'>) => {
       bills.value.push({
         ...bill,
@@ -229,6 +243,48 @@ export function useBills() {
       bills.value = bills.value.filter((item) => item.id !== id);
       sync();
     },
+    updateCategory: (type: 'expense' | 'income', index: number, newCat: Category) => {
+      const oldCat = categories.value[type][index];
+      if (!oldCat) return;
+
+      const oldName = oldCat.name;
+      // 更新分类列表
+      const list = [...categories.value[type]];
+      list[index] = { ...newCat };
+      categories.value = {
+        ...categories.value,
+        [type]: list,
+      };
+
+      // 如果名称变了，同步更新所有关联账单
+      if (oldName !== newCat.name) {
+        bills.value.forEach((bill) => {
+          if (bill.type === type && bill.category === oldName) {
+            bill.category = newCat.name;
+          }
+        });
+      }
+      sync();
+    },
+    updatePerson: (index: number, newPerson: Person) => {
+      const oldPerson = persons.value[index];
+      if (!oldPerson) return;
+
+      const oldName = oldPerson.name;
+      // 更新成员列表
+      const list = [...persons.value];
+      list[index] = { ...newPerson };
+      persons.value = list;
+
+      // 同步更新所有关联账单的姓名和头像
+      bills.value.forEach((bill) => {
+        if (bill.personName === oldName) {
+          bill.personName = newPerson.name;
+          bill.personAvatar = newPerson.avatar;
+        }
+      });
+      sync();
+    },
     addCategory,
     removeCategory: (type: 'expense' | 'income', index: number) => {
       const category = categories.value[type][index];
@@ -244,12 +300,17 @@ export function useBills() {
         return;
       }
 
-      categories.value[type].splice(index, 1);
+      const list = [...categories.value[type]];
+      list.splice(index, 1);
+      categories.value = {
+        ...categories.value,
+        [type]: list,
+      };
       sync();
     },
     addPerson: (person: Person) => {
       if (!persons.value.find((p) => p.name === person.name)) {
-        persons.value.push(person);
+        persons.value = [...persons.value, person];
         sync();
       }
     },
@@ -267,7 +328,9 @@ export function useBills() {
         return;
       }
 
-      persons.value.splice(index, 1);
+      const list = [...persons.value];
+      list.splice(index, 1);
+      persons.value = list;
       sync();
     },
   };

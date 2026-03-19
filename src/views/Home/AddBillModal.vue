@@ -85,7 +85,7 @@
                 :key="cat.name"
                 :class="[
                   'chip-item',
-                  form.category === cat.name ? 'selected' : '',
+                  form.category === cat.name ? (form.type === 'expense' ? 'selected' : 'selected-income') : '',
                 ]"
                 @click="form.category = cat.name"
               >
@@ -428,6 +428,12 @@ const handleSave = () => {
   background: var(--theme-expense-soft);
   border-color: var(--theme-expense);
   color: var(--theme-expense);
+  font-weight: 600;
+}
+.chip-item.selected-income {
+  background: var(--theme-income-soft);
+  border-color: var(--theme-income);
+  color: var(--theme-income);
   font-weight: 600;
 }
 .chip-item.selected-person {

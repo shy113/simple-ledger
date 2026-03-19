@@ -36,19 +36,24 @@
         </view>
       </view>
     </view>
+
+    <GlobalLoading />
   </view>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { useBills } from "../../composables/useBills";
 import { useTheme } from "../../composables/useTheme";
+import { useLoading } from "../../composables/useLoading";
 import { formatMonthLabel } from "../../utils/dateHelper";
+import GlobalLoading from "../../components/GlobalLoading.vue";
 import type { Bill } from "../../types";
 
 const { bills: allBills } = useBills();
 const { themeVars } = useTheme();
+const { hideLoading } = useLoading();
 
 const kind = ref<"category" | "person">("category");
 const name = ref("");
@@ -63,20 +68,34 @@ onLoad((query) => {
     typeof params.month === "string" ? decodeURIComponent(params.month) : "";
 });
 
+onMounted(() => {
+  // 极短延迟，仅用于确保 UI 线程释放
+  setTimeout(() => {
+    hideLoading();
+  }, 150);
+});
+
 const detailBills = computed<Bill[]>(() => {
-  if (!name.value) return [];
   const matched = allBills.value.filter((bill) => {
-    const billMonth = String(bill.date).slice(0, 7);
-    if (monthKey.value && billMonth !== monthKey.value) return false;
-    return kind.value === "category"
-      ? bill.category === name.value
-      : bill.personName === name.value;
+    // 1. 强制只看支出 (明细页通常只看支出详情)
+    if (bill.type !== 'expense') return false;
+
+    // 2. 时间筛选 (兼容 YYYY-MM 和 YYYY 格式)
+    const billDateStr = String(bill.date);
+    if (monthKey.value && !billDateStr.startsWith(monthKey.value)) return false;
+
+    // 3. 名称筛选 (如果有 name)
+    if (!name.value) return true;
+
+    return kind.value === "person"
+      ? bill.personName === name.value
+      : bill.category === name.value;
   });
   return [...matched].sort((a, b) => b.amount - a.amount);
 });
 
 const title = computed(() => {
-  if (!name.value) return "明细";
+  if (!name.value) return "支出总览";
   return kind.value === "category"
     ? `${name.value} 分类明细`
     : `${name.value} 成员明细`;

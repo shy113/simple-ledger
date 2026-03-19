@@ -112,11 +112,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useBills } from '../../composables/useBills';
+import { useLoading } from '../../composables/useLoading';
 import { getMonthKeyFromDate } from '../../utils/dateHelper';
 import type { Bill } from '../../types';
 
 const props = defineProps<{ allBills: Bill[]; periodKey: string; mode: 'month' | 'year' }>();
 const { categories, persons } = useBills();
+const { showLoading, hideLoading } = useLoading();
 
 const currentYear = computed(() => props.periodKey.split('-')[0]);
 const yearBills = computed(() => props.allBills.filter(bill => String(bill.date).startsWith(currentYear.value)));
@@ -183,8 +185,19 @@ const memberStats = computed(() => {
 });
 
 const openDetail = (kind: 'category' | 'person', name: string) => {
-  const query = `kind=${encodeURIComponent(kind)}&name=${encodeURIComponent(name)}&month=${encodeURIComponent(props.periodKey)}`;
-  uni.navigateTo({ url: `/pages/stats-detail/index?${query}` });
+  showLoading('请稍候...');
+  // 如果是年度模式，传递年份(YYYY)；如果是月度模式，传递月份(YYYY-MM)
+  const timeFilter = props.mode === 'year' ? currentYear.value : props.periodKey;
+  const query = `kind=${encodeURIComponent(kind)}&name=${encodeURIComponent(name)}&month=${encodeURIComponent(timeFilter)}`;
+  // 给一帧的时间让 loading 渲染
+  setTimeout(() => {
+    uni.navigateTo({
+      url: `/pages/stats-detail/index?${query}`,
+      complete: () => {
+        // 跳转完成后的逻辑交给详情页处理
+      }
+    });
+  }, 50);
 };
 </script>
 

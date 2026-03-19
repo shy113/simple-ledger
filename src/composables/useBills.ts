@@ -99,7 +99,7 @@ export function useBills() {
   };
 
   const initData = () => {
-    showLoading('数据初始化中...');
+    showLoading('载入中...');
     setTimeout(() => {
       // 账单加载
       const b = uni.getStorageSync('my_bills');
@@ -124,7 +124,7 @@ export function useBills() {
         };
       }
 
-      // 成员加载：如果存储里有，就用存储的；否则用默认的
+      // 成员加载：如果存储里有，就就用存储的；否则用默认的
       const p = uni.getStorageSync('my_persons');
       if (p) {
         persons.value = JSON.parse(p);
@@ -137,7 +137,7 @@ export function useBills() {
         sync();
       }
       hideLoading();
-    }, 500);
+    }, 200);
   };
 
   const addCategory = (type: 'expense' | 'income', cat: Category) => {
@@ -168,7 +168,7 @@ export function useBills() {
   );
 
   const restoreBackupData = (raw: string | Record<string, any>) => {
-    showLoading('数据导入中...');
+    showLoading('同步中...');
     setTimeout(() => {
       try {
         const payload = typeof raw === 'string' ? JSON.parse(raw.replace(/^\ufeff/, '')) : raw;
@@ -188,7 +188,7 @@ export function useBills() {
       } finally {
         hideLoading();
       }
-    }, 800);
+    }, 400);
   };
 
   const isCategoryDeletable = (type: 'expense' | 'income', categoryName: string) => {

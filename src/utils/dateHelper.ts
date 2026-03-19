@@ -44,9 +44,10 @@ export function getCurrentMonthKey(): string {
 }
 
 export function formatMonthLabel(monthKey: string): string {
-  const [year, month] = monthKey.split('-');
-  if (!year || !month) return monthKey;
-  return `${year}年${Number(month)}月`;
+  const parts = monthKey.split('-');
+  if (parts.length === 1) return `${parts[0]}年`; // 只有年份
+  if (parts.length === 2) return `${parts[0]}年${Number(parts[1])}月`; // 年月
+  return monthKey;
 }
 
 export function getMonthKeyFromDate(input: string): string {

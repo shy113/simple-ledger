@@ -68,8 +68,13 @@ const viewKey = computed(() => {
 const handleAddNew = () => { editingBill.value = null; showAddModal.value = true; };
 const handleEdit = (bill: Bill) => { editingBill.value = bill; showAddModal.value = true; };
 const handleSummaryClick = () => {
+  // 如果当前是统计页且是年度模式，则跳转年度详情
+  const timeFilter = (activeTab.value === 'stats' && statMode.value === 'year')
+    ? selectedMonth.value.split('-')[0]
+    : selectedMonth.value;
+
   uni.navigateTo({
-    url: `/pages/stats-detail/index?month=${selectedMonth.value}`
+    url: `/pages/stats-detail/index?month=${timeFilter}`
   });
 };
 const handleMonthChange = (event: any) => {

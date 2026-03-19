@@ -4,6 +4,22 @@
       <block v-if="totalExpense > 0">
         <!-- A. 年度特有视图 -->
         <view v-if="mode === 'year'">
+          <!-- 专属年份选择器 -->
+          <view class="year-nav-bar staggered-item" style="--delay: 0">
+            <view class="year-nav-btn clickable" @click="$emit('shift-year', -1)">
+              <text class="nav-arrow">◀</text>
+              <text class="nav-text">上一年</text>
+            </view>
+            <view class="year-display">
+              <text class="year-num">{{ currentYear }}</text>
+              <text class="year-unit">年度统计</text>
+            </view>
+            <view class="year-nav-btn clickable" @click="$emit('shift-year', 1)">
+              <text class="nav-text">下一年</text>
+              <text class="nav-arrow">▶</text>
+            </view>
+          </view>
+
           <!-- ① 年度关键词看板 -->
           <view class="insights-grid staggered-item" style="--delay: 1">
             <view class="insight-card">
@@ -204,6 +220,59 @@ const openDetail = (kind: 'category' | 'person', name: string) => {
 <style scoped>
 .stats-container { padding-bottom: 40rpx; }
 .stats-content-wrap { display: flex; flex-direction: column; }
+
+/* 年份导航样式 */
+.year-nav-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--theme-surface-strong);
+  border: 1rpx solid var(--theme-border);
+  border-radius: 32rpx;
+  padding: 16rpx 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.year-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 20rpx;
+  background: var(--theme-surface);
+  border-radius: 20rpx;
+  border: 1rpx solid var(--theme-border);
+}
+
+.nav-arrow {
+  font-size: 20rpx;
+  color: var(--theme-primary);
+}
+
+.nav-text {
+  font-size: 24rpx;
+  color: var(--theme-text-muted);
+  font-weight: 700;
+}
+
+.year-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.year-num {
+  font-size: 36rpx;
+  font-weight: 800;
+  color: var(--theme-text);
+  line-height: 1.1;
+}
+
+.year-unit {
+  font-size: 20rpx;
+  color: var(--theme-text-muted);
+  letter-spacing: 2rpx;
+}
 
 /* 交错入场动画 */
 .staggered-item {

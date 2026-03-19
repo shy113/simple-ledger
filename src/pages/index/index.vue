@@ -89,6 +89,16 @@ const shiftMonth = (offset: number) => {
   selectedMonth.value = `${date.getFullYear()}-${nextMonth}`;
 };
 
+const handlePrevMonth = () => {
+  if (isYearlyMode.value) shiftMonth(-12);
+  else shiftMonth(-1);
+};
+
+const handleNextMonth = () => {
+  if (isYearlyMode.value) shiftMonth(12);
+  else shiftMonth(1);
+};
+
 const closeBackupModal = () => { backupStep.value = 'main'; showBackupModal.value = false; };
 
 const handleBackupExport = () => {
@@ -153,8 +163,8 @@ const handleImportFile = () => {
           :balance="periodBalance"
           :income="periodIncome"
           :expense="periodExpense"
-          @prev-month="shiftMonth(-1)"
-          @next-month="shiftMonth(1)"
+          @prev-month="handlePrevMonth"
+          @next-month="handleNextMonth"
           @pick-month="handleMonthChange"
           @click-balance="handleSummaryClick"
           @click-income="activeTab = 'list'; selectedType = 'income'"
@@ -204,6 +214,7 @@ const handleImportFile = () => {
           :period-key="selectedMonth"
           :mode="statMode"
           @select-month="(m) => { selectedMonth = m; activeTab = 'list'; }"
+          @shift-year="(offset) => shiftMonth(offset * 12)"
         />
       </view>
     </scroll-view>

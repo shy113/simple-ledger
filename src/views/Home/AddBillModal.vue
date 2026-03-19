@@ -83,10 +83,8 @@
               <view
                 v-for="cat in categories[form.type]"
                 :key="cat.name"
-                :class="[
-                  'chip-item',
-                  form.category === cat.name ? (form.type === 'expense' ? 'selected' : 'selected-income') : '',
-                ]"
+                class="chip-item"
+                :class="{ 'selected': form.category === cat.name }"
                 @click="form.category = cat.name"
               >
                 <text>{{ cat.icon }} {{ cat.name }}</text>
@@ -425,15 +423,9 @@ const handleSave = () => {
   color: var(--theme-text);
 }
 .chip-item.selected {
-  background: var(--theme-expense-soft);
-  border-color: var(--theme-expense);
-  color: var(--theme-expense);
-  font-weight: 600;
-}
-.chip-item.selected-income {
-  background: var(--theme-income-soft);
-  border-color: var(--theme-income);
-  color: var(--theme-income);
+  background: var(--theme-primary-soft);
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
   font-weight: 600;
 }
 .chip-item.selected-person {

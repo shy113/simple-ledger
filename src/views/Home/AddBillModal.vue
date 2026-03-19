@@ -2,6 +2,7 @@
   <view
     v-if="modelValue"
     class="modal-mask"
+    :class="{ 'mask-show': modelValue }"
     @click="$emit('update:modelValue', false)"
     @touchmove.stop.prevent
   >
@@ -38,7 +39,8 @@
             v-model="form.amount"
             placeholder="0.00"
             confirm-type="done"
-            :adjust-position="false"
+            :adjust-position="true"
+            :cursor-spacing="20"
           />
         </view>
 
@@ -48,7 +50,8 @@
             class="note-input"
             placeholder="备注（可选）"
             confirm-type="done"
-            :adjust-position="false"
+            :adjust-position="true"
+            :cursor-spacing="20"
           />
         </view>
 
@@ -63,7 +66,8 @@
               v-model="form.date"
               placeholder="输入如 0318"
               confirm-type="done"
-              :adjust-position="false"
+              :adjust-position="true"
+              :cursor-spacing="20"
             />
             <text class="today-tag" @click="setToday">📍</text>
           </view>
@@ -74,7 +78,7 @@
             <text class="section-label">选择分类</text>
             <text class="manage-btn" @click="$emit('manage-cat')">📂+</text>
           </view>
-          <scroll-view scroll-x class="scroll-x">
+          <scroll-view scroll-x class="scroll-x" :enhanced="true" :show-scrollbar="false">
             <view class="flex-row">
               <view
                 v-for="cat in categories[form.type]"
@@ -96,7 +100,7 @@
             <text class="section-label">记录成员</text>
             <text class="manage-btn" @click="$emit('manage-person')">👤+</text>
           </view>
-          <scroll-view scroll-x class="scroll-x">
+          <scroll-view scroll-x class="scroll-x" :enhanced="true" :show-scrollbar="false">
             <view class="flex-row">
               <view
                 v-for="p in persons"
@@ -221,29 +225,44 @@ const handleSave = () => {
 .modal-mask {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0); /* 初始透明 */
   z-index: 200;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  transition: background-color 0.3s ease;
+  backdrop-filter: blur(0px);
+}
+
+.mask-show {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4rpx);
 }
 
 .modal-content {
   background: var(--theme-card-gradient);
   border-radius: 50rpx 50rpx 0 0;
   padding: 40rpx 40rpx 24rpx;
-  animation: slideUp 0.3s;
   max-height: 85vh;
+  min-height: 60vh; /* 设置稳定高度，防止渲染初态抖动 */
   display: flex;
   flex-direction: column;
+  /* 开启 GPU 加速 */
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 100%, 0);
+  animation: slideUp 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(100%);
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.8;
   }
   to {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
   }
 }
 

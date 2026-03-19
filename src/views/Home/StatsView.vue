@@ -5,7 +5,7 @@
         <!-- A. 年度特有视图 -->
         <view v-if="mode === 'year'">
           <!-- ① 年度关键词看板 -->
-          <view class="insights-grid">
+          <view class="insights-grid staggered-item" style="--delay: 1">
             <view class="insight-card">
               <view class="insight-icon">🔥</view>
               <view class="insight-content">
@@ -33,7 +33,7 @@
           </view>
 
           <!-- ② 年度趋势图 -->
-          <view class="stats-card">
+          <view class="stats-card staggered-item" style="--delay: 2">
             <view class="card-head">年度趋势</view>
             <view class="chart-container">
               <view v-for="item in monthlyTrend" :key="item.month" class="chart-bar-wrap">
@@ -48,9 +48,9 @@
           </view>
 
           <!-- ③ 月度摘要列表 -->
-          <view class="stats-card">
+          <view class="stats-card staggered-item" style="--delay: 3">
             <view class="card-head">月度摘要</view>
-            <view v-for="item in monthlyTrend.filter(i => i.amount > 0).slice().reverse()" :key="item.month" class="stat-line">
+            <view v-for="(item, index) in monthlyTrend.filter(i => i.amount > 0).slice().reverse()" :key="item.month" class="stat-line">
               <view class="line-info">
                 <text class="item-name">{{ item.month }}月</text>
                 <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
@@ -63,9 +63,9 @@
         </view>
 
         <!-- B. 通用排行视图 -->
-        <view class="stats-card">
+        <view class="stats-card staggered-item" :style="{ '--delay': mode === 'year' ? 4 : 1 }">
           <view class="card-head">分类排行</view>
-          <view v-for="item in categoryStats" :key="item.name" class="stat-line clickable" @click="openDetail('category', item.name)">
+          <view v-for="(item, index) in categoryStats" :key="item.name" class="stat-line staggered-item clickable" :style="{ '--delay': (mode === 'year' ? 4 : 1) + (index * 0.1) }" @click="openDetail('category', item.name)">
             <view class="line-info">
               <text class="item-name">{{ item.icon }} {{ item.name }}</text>
               <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
@@ -76,9 +76,9 @@
           </view>
         </view>
 
-        <view class="stats-card">
+        <view class="stats-card staggered-item" :style="{ '--delay': mode === 'year' ? 5 : 2 }">
           <view class="card-head">成员排行</view>
-          <view v-for="item in memberStats" :key="item.name" class="stat-line clickable" @click="openDetail('person', item.name)">
+          <view v-for="(item, index) in memberStats" :key="item.name" class="stat-line staggered-item clickable" :style="{ '--delay': (mode === 'year' ? 5 : 2) + (index * 0.1) }" @click="openDetail('person', item.name)">
             <view class="line-info">
               <text class="item-name">{{ item.avatar }} {{ item.name }}</text>
               <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
@@ -91,7 +91,7 @@
       </block>
 
       <!-- 空白页占位 -->
-      <view v-else class="empty-placeholder-card">
+      <view v-else class="empty-placeholder-card staggered-item" style="--delay: 1">
         <view class="empty-icon-wrap">
           <text class="empty-emoji">📝</text>
           <view class="empty-circle"></view>
@@ -188,6 +188,24 @@ const openDetail = (kind: 'category' | 'person', name: string) => {
 <style scoped>
 .stats-container { padding-bottom: 40rpx; }
 .stats-content-wrap { display: flex; flex-direction: column; }
+
+/* 交错入场动画 */
+.staggered-item {
+  animation: itemFadeIn 0.45s ease-out both;
+  animation-delay: calc(var(--delay) * 0.1s);
+  will-change: opacity, transform;
+}
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .empty-placeholder-card { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 800rpx; background: var(--theme-card-gradient); border: 1rpx solid var(--theme-border); border-radius: 42rpx; padding: 60rpx 40rpx; box-shadow: var(--theme-card-shadow); backdrop-filter: blur(20rpx); margin: 0 4rpx; }
 .empty-icon-wrap { position: relative; width: 200rpx; height: 200rpx; display: flex; align-items: center; justify-content: center; margin-bottom: 40rpx; }

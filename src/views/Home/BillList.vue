@@ -14,12 +14,13 @@
         </view>
       </view>
 
-      <!-- 列表内容 -->
+      <!-- 列表内容：增加 staggered-item 类用于动画 -->
       <view
         v-else
-        v-for="bill in sortedBills"
+        v-for="(bill, index) in sortedBills"
         :key="bill.id"
-        class="bill-swipe"
+        class="bill-swipe staggered-item"
+        :style="{ '--delay': index }"
         :class="{ open: openBillId === bill.id }"
         @touchstart="handleTouchStart($event, bill.id)"
         @touchmove="handleTouchMove($event, bill.id)"
@@ -152,7 +153,7 @@ const handleDelete = (id: number) => {
 </script>
 
 <style scoped>
-/* 内容卡片层：完全扁平化，移除圆角和边框 */
+/* 内容卡片层：完全扁平化 */
 .list-content-card {
   background: var(--theme-card-gradient);
   border: none;
@@ -161,8 +162,25 @@ const handleDelete = (id: number) => {
 }
 
 .list-content-wrap {
-  /* 增加顶部内边距，补偿上方药丸压下来的部分 */
   padding: 48rpx 24rpx 32rpx;
+}
+
+/* 列表项入场动画：交错效果 */
+.staggered-item {
+  animation: itemFadeIn 0.45s ease-out both;
+  animation-delay: calc(var(--delay) * 0.05s);
+  will-change: opacity, transform;
+}
+
+@keyframes itemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .bill-swipe {

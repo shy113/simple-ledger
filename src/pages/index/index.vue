@@ -227,7 +227,7 @@ page { height: 100%; background: var(--theme-page-bg); }
 .ambient-a { width: 360rpx; height: 360rpx; right: -120rpx; top: -90rpx; background: rgba(255, 255, 255, 0.40); }
 .ambient-b { width: 420rpx; height: 420rpx; left: -180rpx; top: 460rpx; background: var(--theme-accent-ambient); }
 
-.fixed-header { flex-shrink: 0; padding: 24rpx 32rpx 0; position: relative; z-index: 100; /* 提高整体头部层级 */ }
+.fixed-header { flex-shrink: 0; padding: 24rpx 32rpx 0; position: relative; z-index: 100; }
 .header-wrap { position: relative; margin-bottom: 18rpx; }
 .header-actions { position: absolute; right: 12rpx; top: 16rpx; display: flex; gap: 12rpx; }
 .header-btn { width: 68rpx; height: 68rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--theme-surface-strong); border: 1rpx solid rgba(133, 214, 158, 0.42); box-shadow: 0 10rpx 20rpx rgba(52, 101, 65, 0.08); color: var(--theme-primary); font-size: 28rpx; font-weight: 700; }
@@ -240,7 +240,7 @@ page { height: 100%; background: var(--theme-page-bg); }
 .type-item { flex: 1; text-align: center; line-height: 72rpx; font-size: 26rpx; color: var(--theme-text-muted); border-radius: 999rpx; background: var(--theme-surface); border: 1rpx solid var(--theme-border); transition: all 0.24s ease; }
 .type-item.active { color: var(--theme-primary); font-weight: 700; background: var(--theme-surface-strong); border-color: var(--theme-primary); box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08); }
 
-/* 排序栏固定样式：使用负的 margin-bottom 实现对列表的“压制” */
+/* 排序栏固定样式 */
 .list-toolbar-fixed {
   display: flex;
   justify-content: space-between;
@@ -250,9 +250,9 @@ page { height: 100%; background: var(--theme-page-bg); }
   background: var(--theme-surface-strong);
   border-radius: 42rpx;
   margin-top: 10rpx;
-  margin-bottom: -32rpx; /* 关键：负边距让列表向上抽取 */
+  margin-bottom: -32rpx;
   position: relative;
-  z-index: 10; /* 确保药丸压在滚动内容上方 */
+  z-index: 10;
 }
 
 .toolbar-labels { display: flex; flex-direction: column; }
@@ -266,14 +266,21 @@ page { height: 100%; background: var(--theme-page-bg); }
 .scroll-content { flex: 1; width: 100%; min-height: 0; }
 .view-content-wrap { padding: 0 32rpx; min-height: 100%; display: flex; flex-direction: column; }
 
-/* 列表卡片：取消圆角，并确保它被药丸压在下面 */
-/* 强制取消列表卡片的所有圆角 */
-.view-content-wrap:has(.list-content-card) .list-content-card {
-  border-radius: 0 !important;
-  margin-top: 0;
+/* 容器入场动画：兼容性优化 */
+.fade-in { 
+  -webkit-animation: fadeInAnim 0.4s ease-out both;
+  animation: fadeInAnim 0.4s ease-out both; 
 }
-.fade-in { animation: fadeIn 0.4s ease-out both; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(16rpx); } to { opacity: 1; transform: translateY(0); } }
+
+@-webkit-keyframes fadeInAnim {
+  from { opacity: 0; -webkit-transform: translateY(16rpx); transform: translateY(16rpx); }
+  to { opacity: 1; -webkit-transform: translateY(0); transform: translateY(0); }
+}
+
+@keyframes fadeInAnim {
+  from { opacity: 0; transform: translateY(16rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .add-fab { position: fixed; right: 28rpx; bottom: 34rpx; width: 108rpx; height: 108rpx; border-radius: 50%; background: var(--theme-fab-gradient); color: #fff; text-align: center; line-height: 108rpx; font-size: 68rpx; box-shadow: 0 18rpx 30rpx rgba(71, 126, 88, 0.25); z-index: 20; }
 .backup-mask { position: fixed; inset: 0; z-index: 310; background: rgba(47, 53, 66, 0.56); display: flex; align-items: flex-end; }

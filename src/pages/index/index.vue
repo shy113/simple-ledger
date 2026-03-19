@@ -260,7 +260,7 @@ const handleImportFile = () => {
       </view>
 
       <view v-else key="stats-tab">
-        <StatsView :bills="monthBills" :period-key="selectedMonth" />
+        <StatsView :all-bills="bills" :period-key="selectedMonth" />
       </view>
     </scroll-view>
 

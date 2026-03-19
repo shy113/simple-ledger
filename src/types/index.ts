@@ -2,15 +2,15 @@
 export interface Bill {
   id: number;
   amount: number;
-  type: 'expense' | 'income';
+  type: "expense" | "income";
   category: string;
-  personName: string;   // 人物姓名
-  personAvatar: string; // 人物头像 (Emoji)
+  personName: string; // 成员姓名
+  personAvatar: string; // 成员头像 (Emoji)
   date: string;
   note: string;
 }
 
-// 人物类型定义
+// 成员类型定义
 export interface Person {
   name: string;
   avatar: string;

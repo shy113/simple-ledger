@@ -93,7 +93,7 @@
 
         <view class="section-box">
           <view class="section-header-inline">
-            <text class="section-label">记录人物</text>
+            <text class="section-label">记录成员</text>
             <text class="manage-btn" @click="$emit('manage-person')">👤+</text>
           </view>
           <scroll-view scroll-x class="scroll-x">

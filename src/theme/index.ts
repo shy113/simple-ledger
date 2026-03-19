@@ -72,6 +72,12 @@ const makeTheme = (
     "--theme-expense": baseExpense,
     "--theme-income-soft": "rgba(42, 191, 150, 0.12)",
     "--theme-expense-soft": "rgba(255, 90, 90, 0.12)",
+
+    // 统计图表与年统计相关
+    "--theme-chart-bar": primary, // 改为纯色，透明度在 CSS 中通过 opacity 控制
+    "--theme-chart-bar-highlight": primary, // 主色，用于最高柱条
+    "--theme-insight-card-bg": "rgba(255, 255, 255, 0.5)",
+    "--theme-insight-icon-bg": `${primary}15`, // 这里保持是因为 15% 往往能被识别，但为了保险我也建议后续统一
   },
 });
 

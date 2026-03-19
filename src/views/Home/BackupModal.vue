@@ -1,12 +1,20 @@
 ﻿<template>
-  <view v-if="modelValue" class="modal-mask" @click="$emit('update:modelValue', false)">
+  <view
+    v-if="modelValue"
+    class="modal-mask"
+    @click="$emit('update:modelValue', false)"
+  >
     <view class="modal-content" @click.stop>
       <view class="modal-header">
         <text class="modal-title">数据备份</text>
-        <text class="close-btn" @click="$emit('update:modelValue', false)">×</text>
+        <text class="close-btn" @click="$emit('update:modelValue', false)"
+          >×</text
+        >
       </view>
 
-      <text class="modal-desc">导出会把账单、分类和人物打包成 JSON；导入会覆盖当前本地数据。</text>
+      <text class="modal-desc"
+        >导出会把账单、分类和成员打包成 JSON；导入会覆盖当前本地数据。</text
+      >
 
       <view v-if="step === 'main'" class="action-grid">
         <view class="action-card export-card" @click="handleExport">
@@ -37,59 +45,59 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useBills } from '../../composables/useBills';
-import { useTheme } from '../../composables/useTheme';
+import { ref } from "vue";
+import { useBills } from "../../composables/useBills";
+import { useTheme } from "../../composables/useTheme";
 
 const props = defineProps<{
   modelValue: boolean;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
+  (e: "update:modelValue", value: boolean): void;
 }>();
 
-const step = ref<'main' | 'import'>('main');
+const step = ref<"main" | "import">("main");
 const { exportBackupData, restoreBackupData } = useBills();
 
 const close = () => {
-  step.value = 'main';
-  emit('update:modelValue', false);
+  step.value = "main";
+  emit("update:modelValue", false);
 };
 
 const handleExport = () => {
   const payload = exportBackupData();
   const clipboard = (uni as any).setClipboardData;
-  if (typeof clipboard !== 'function') {
-    uni.showToast({ title: '当前环境不支持复制', icon: 'none' });
+  if (typeof clipboard !== "function") {
+    uni.showToast({ title: "当前环境不支持复制", icon: "none" });
     return;
   }
 
   clipboard({
     data: payload,
     success: () => {
-      uni.showToast({ title: '备份已复制', icon: 'success' });
+      uni.showToast({ title: "备份已复制", icon: "success" });
       close();
     },
     fail: () => {
-      uni.showToast({ title: '导出失败', icon: 'none' });
+      uni.showToast({ title: "导出失败", icon: "none" });
     },
   });
 };
 
 const confirmRestore = (raw: string) => {
   uni.showModal({
-    title: '确认导入',
-    content: '导入会覆盖当前本地数据，确定继续吗？',
-    confirmColor: '#34C26B',
+    title: "确认导入",
+    content: "导入会覆盖当前本地数据，确定继续吗？",
+    confirmColor: "#34C26B",
     success: (res) => {
       if (!res.confirm) return;
       try {
         restoreBackupData(raw);
-        uni.showToast({ title: '导入成功', icon: 'success' });
+        uni.showToast({ title: "导入成功", icon: "success" });
         close();
       } catch (error) {
-        uni.showToast({ title: '导入失败', icon: 'none' });
+        uni.showToast({ title: "导入失败", icon: "none" });
       }
     },
   });
@@ -97,56 +105,57 @@ const confirmRestore = (raw: string) => {
 
 const handleImportClipboard = () => {
   const getClipboard = (uni as any).getClipboardData;
-  if (typeof getClipboard !== 'function') {
-    uni.showToast({ title: '当前环境不支持剪贴板', icon: 'none' });
+  if (typeof getClipboard !== "function") {
+    uni.showToast({ title: "当前环境不支持剪贴板", icon: "none" });
     return;
   }
 
   getClipboard({
     success: (res: any) => {
-      const raw = String(res.data || '').trim();
+      const raw = String(res.data || "").trim();
       if (!raw) {
-        uni.showToast({ title: '剪贴板为空', icon: 'none' });
+        uni.showToast({ title: "剪贴板为空", icon: "none" });
         return;
       }
       confirmRestore(raw);
     },
     fail: () => {
-      uni.showToast({ title: '读取剪贴板失败', icon: 'none' });
+      uni.showToast({ title: "读取剪贴板失败", icon: "none" });
     },
   });
 };
 
 const handleImportFile = () => {
   const choose = (uni as any).chooseMessageFile;
-  if (typeof choose !== 'function') {
-    uni.showToast({ title: '当前环境不支持文件导入', icon: 'none' });
+  if (typeof choose !== "function") {
+    uni.showToast({ title: "当前环境不支持文件导入", icon: "none" });
     return;
   }
 
   choose({
     count: 1,
-    type: 'file',
-    extension: ['json'],
+    type: "file",
+    extension: ["json"],
     success: (res: any) => {
       const file = res?.tempFiles?.[0];
       const path = file?.path;
       if (!path) {
-        uni.showToast({ title: '未选择文件', icon: 'none' });
+        uni.showToast({ title: "未选择文件", icon: "none" });
         return;
       }
 
       const fs = (globalThis as any).wx?.getFileSystemManager?.();
       if (!fs?.readFile) {
-        uni.showToast({ title: '当前环境不支持读取文件', icon: 'none' });
+        uni.showToast({ title: "当前环境不支持读取文件", icon: "none" });
         return;
       }
 
       fs.readFile({
         filePath: path,
-        encoding: 'utf8',
-        success: (readRes: any) => confirmRestore(String(readRes.data || '').trim()),
-        fail: () => uni.showToast({ title: '读取文件失败', icon: 'none' }),
+        encoding: "utf8",
+        success: (readRes: any) =>
+          confirmRestore(String(readRes.data || "").trim()),
+        fail: () => uni.showToast({ title: "读取文件失败", icon: "none" }),
       });
     },
   });

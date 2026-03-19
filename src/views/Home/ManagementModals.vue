@@ -1,5 +1,5 @@
 ﻿<template>
-  <view v-if="showCat" class="modal-mask" @click="$emit('update:showCat', false)">
+  <view v-if="showCat" class="modal-mask" @click="$emit('update:showCat', false)" @touchmove.stop.prevent>
     <view class="modal-content" @click.stop>
       <view class="modal-header">
         <text class="modal-title">管理分类</text>
@@ -19,7 +19,7 @@
     </view>
   </view>
 
-  <view v-if="showPerson" class="modal-mask" @click="$emit('update:showPerson', false)">
+  <view v-if="showPerson" class="modal-mask" @click="$emit('update:showPerson', false)" @touchmove.stop.prevent>
     <view class="modal-content" @click.stop>
       <view class="modal-header">
         <text class="modal-title">管理人物</text>

@@ -1,8 +1,9 @@
-﻿<template>
+<template>
   <view
     v-if="modelValue"
     class="modal-mask"
     @click="$emit('update:modelValue', false)"
+    @touchmove.stop.prevent
   >
     <view class="modal-content" @click.stop>
       <view class="modal-header">
@@ -12,7 +13,7 @@
         >
       </view>
 
-      <scroll-view scroll-y class="modal-scroll-area">
+      <view class="modal-area">
         <view class="type-tab">
           <view
             :class="[
@@ -111,9 +112,7 @@
             </view>
           </scroll-view>
         </view>
-
-        <view class="bottom-spacer"></view>
-      </scroll-view>
+      </view>
 
       <view class="modal-footer">
         <button class="save-btn" @click="handleSave">
@@ -264,10 +263,10 @@ const handleSave = () => {
   color: var(--theme-text-muted);
   padding: 10rpx;
 }
-.modal-scroll-area {
+.modal-area {
   flex: 1;
-  overflow-y: auto;
   margin-bottom: 24rpx;
+  overflow: hidden;
 }
 .date-input-box {
   display: flex;
@@ -388,9 +387,6 @@ const handleSave = () => {
   border-color: var(--theme-primary);
   color: var(--theme-primary);
   font-weight: 600;
-}
-.bottom-spacer {
-  height: 180rpx;
 }
 .modal-footer {
   padding-top: 14rpx;

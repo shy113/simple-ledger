@@ -273,7 +273,7 @@ const handleImportFile = () => {
       @manage-person="showPersonManager = true"
     />
 
-    <view v-if="showBackupModal" class="backup-mask" @click="closeBackupModal">
+    <view v-if="showBackupModal" class="backup-mask" @click="closeBackupModal" @touchmove.stop.prevent>
       <view class="backup-sheet" @click.stop>
         <view class="backup-header">
           <text class="backup-title">数据备份</text>

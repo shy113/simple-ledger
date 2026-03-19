@@ -21,12 +21,12 @@
               'tab-item',
               form.type === 'expense' ? 'active-expense' : '',
             ]"
-            @click="form.type = 'expense'"
+            @click="handleTypeChange('expense')"
             >支出</view
           >
           <view
             :class="['tab-item', form.type === 'income' ? 'active-income' : '']"
-            @click="form.type = 'income'"
+            @click="handleTypeChange('income')"
             >收入</view
           >
         </view>
@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import { useBills } from "../../composables/useBills";
 import { smartParseDate } from "../../utils/dateHelper";
 import type { Bill } from "../../types";
@@ -141,7 +141,7 @@ const { categories, persons, addBill, updateBill } = useBills();
 const isEdit = computed(() => !!props.editData);
 
 const form = ref({
-  id: 0,
+  id: 0, // 0 表示新增模式，>0 表示正在编辑某条账单
   amount: "",
   type: "expense" as "expense" | "income",
   date: "",
@@ -151,11 +151,35 @@ const form = ref({
   note: "",
 });
 
+// 设置今天日期
+const setToday = () => {
+  const d = new Date();
+  form.value.date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+// 重置表单为“新增”状态的初始草稿
+const resetToNew = () => {
+  setToday();
+  form.value.id = 0;
+  form.value.amount = "";
+  form.value.note = "";
+  form.value.type = "expense";
+  form.value.category = categories.value.expense[0]?.name || "其他";
+  const firstPerson = persons.value[0] || { name: "本人", avatar: "🧑" };
+  form.value.personName = firstPerson.name;
+  form.value.personAvatar = firstPerson.avatar;
+};
+
+onMounted(() => {
+  resetToNew();
+});
+
 watch(
   () => props.modelValue,
-  (val) => {
-    if (val) {
+  (isOpen) => {
+    if (isOpen) {
       if (props.editData) {
+        // 1. 如果是编辑模式，强制加载被编辑的数据
         form.value = {
           id: props.editData.id,
           amount: String(props.editData.amount),
@@ -167,23 +191,24 @@ watch(
           note: props.editData.note,
         };
       } else {
-        setToday();
-        form.value.id = 0;
-        form.value.amount = "";
-        form.value.note = "";
-        form.value.category =
-          categories.value[form.value.type][0]?.name || "其他";
-        const firstPerson = persons.value[0] || { name: "本人", avatar: "🧑" };
-        form.value.personName = firstPerson.name;
-        form.value.personAvatar = firstPerson.avatar;
+        // 2. 如果是新增模式
+        // 如果当前表单里存的是之前编辑的数据（id > 0），则说明用户点击了底部的“+”号切换到了新增模式，此时需要清空
+        if (form.value.id !== 0) {
+          resetToNew();
+        }
+        // 如果 form.value.id 本来就是 0，说明它是之前的草稿，保持原样不动
       }
     }
   },
 );
 
-const setToday = () => {
-  const d = new Date();
-  form.value.date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const handleTypeChange = (type: "expense" | "income") => {
+  form.value.type = type;
+  // 切换类型时，如果当前选中的分类不在新类型的列表里，自动选第一个
+  const exists = categories.value[type].some(c => c.name === form.value.category);
+  if (!exists) {
+    form.value.category = categories.value[type][0]?.name || "其他";
+  }
 };
 
 const formatDate = () => {
@@ -212,9 +237,13 @@ const handleSave = () => {
   if (isEdit.value) {
     updateBill({ ...billPayload, id: form.value.id });
     uni.showToast({ title: "修改成功", icon: "success" });
+    // 编辑成功关闭后，重置 id 为 0，下次点开新增就是空的了
+    setTimeout(() => resetToNew(), 300);
   } else {
     addBill(billPayload);
     uni.showToast({ title: "已记录", icon: "success" });
+    // 新增成功后清空草稿
+    resetToNew();
   }
 
   emit("update:modelValue", false);

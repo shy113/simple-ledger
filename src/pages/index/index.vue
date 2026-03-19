@@ -22,10 +22,7 @@ const toggleTheme = () => {
   uni.showToast({ title: `已切换至 ${themeOptions[nextIndex].name}`, icon: 'none' });
 };
 
-const activeTab = ref<'list' | 'stats'>('list');
 const selectedMonth = ref(getCurrentMonthKey());
-const selectedType = ref<'expense' | 'income'>('expense');
-const statMode = ref<'month' | 'year'>('month');
 const sortMode = ref<'date' | 'amount'>('date');
 
 const showAddModal = ref(false);
@@ -34,6 +31,7 @@ const backupStep = ref<'main' | 'import'>('main');
 const showCatManager = ref(false);
 const showPersonManager = ref(false);
 const editingBill = ref<Bill | null>(null);
+const activeType = ref<'expense' | 'income'>('expense');
 
 onMounted(() => {
   initData();
@@ -57,24 +55,23 @@ const periodExpense = computed(() =>
 const periodBalance = computed(() => periodIncome.value - periodExpense.value);
 
 const displayedBills = computed(() => {
-  return monthBills.value.filter((bill) => bill.type === selectedType.value);
+  return monthBills.value;
 });
 
 const viewKey = computed(() => {
-  const base = activeTab.value === 'list' ? `list-${selectedType.value}` : `stats-${statMode.value}`;
-  return `${base}-${selectedMonth.value}`;
+  return `list-${selectedMonth.value}`;
 });
 
 const handleAddNew = () => { editingBill.value = null; showAddModal.value = true; };
 const handleEdit = (bill: Bill) => { editingBill.value = bill; showAddModal.value = true; };
-const handleSummaryClick = () => {
-  // 如果当前是统计页且是年度模式，则跳转年度详情
-  const timeFilter = (activeTab.value === 'stats' && statMode.value === 'year')
-    ? selectedMonth.value.split('-')[0]
-    : selectedMonth.value;
-
+const goToStats = () => {
   uni.navigateTo({
-    url: `/pages/stats-detail/index?month=${timeFilter}`
+    url: '/pages/stats/index'
+  });
+};
+const handleSummaryClick = () => {
+  uni.navigateTo({
+    url: `/pages/stats-detail/index?month=${selectedMonth.value}`
   });
 };
 const handleMonthChange = (event: any) => {
@@ -90,13 +87,11 @@ const shiftMonth = (offset: number) => {
 };
 
 const handlePrevMonth = () => {
-  if (isYearlyMode.value) shiftMonth(-12);
-  else shiftMonth(-1);
+  shiftMonth(-1);
 };
 
 const handleNextMonth = () => {
-  if (isYearlyMode.value) shiftMonth(12);
-  else shiftMonth(1);
+  shiftMonth(1);
 };
 
 const closeBackupModal = () => { backupStep.value = 'main'; showBackupModal.value = false; };
@@ -167,8 +162,8 @@ const handleImportFile = () => {
           @next-month="handleNextMonth"
           @pick-month="handleMonthChange"
           @click-balance="handleSummaryClick"
-          @click-income="activeTab = 'list'; selectedType = 'income'"
-          @click-expense="activeTab = 'list'; selectedType = 'expense'"
+          @click-income="() => {}"
+          @click-expense="() => {}"
         />
         <view class="header-actions">
           <view class="header-btn clickable" @click="toggleTheme">🎨</view>
@@ -176,24 +171,8 @@ const handleImportFile = () => {
         </view>
       </view>
 
-      <view class="view-switcher">
-        <view :class="['switch-item clickable', activeTab === 'list' ? 'active' : '']" @click="activeTab = 'list'">明细</view>
-        <view :class="['switch-item clickable', activeTab === 'stats' ? 'active' : '']" @click="activeTab = 'stats'">统计</view>
-      </view>
-
-      <view class="type-switcher">
-        <template v-if="activeTab === 'list'">
-          <view :class="['type-item clickable', selectedType === 'expense' ? 'active' : '']" @click="selectedType = 'expense'">支出</view>
-          <view :class="['type-item clickable', selectedType === 'income' ? 'active' : '']" @click="selectedType = 'income'">收入</view>
-        </template>
-        <template v-else>
-          <view :class="['type-item clickable', statMode === 'month' ? 'active' : '']" @click="statMode = 'month'">月度(支出)</view>
-          <view :class="['type-item clickable', statMode === 'year' ? 'active' : '']" @click="statMode = 'year'">年度(支出)</view>
-        </template>
-      </view>
-
       <!-- 排序工具栏：压在列表上方的药丸 -->
-      <view v-if="activeTab === 'list'" class="list-toolbar-fixed">
+      <view class="list-toolbar-fixed">
         <view class="toolbar-labels">
           <text class="toolbar-title">排序方式</text>
           <text class="toolbar-hint">当前：{{ sortMode === "date" ? "按日期" : "按金额" }}</text>
@@ -207,24 +186,17 @@ const handleImportFile = () => {
 
     <scroll-view class="scroll-content" scroll-y>
       <view :key="viewKey" class="view-content-wrap fade-in">
-        <BillList v-if="activeTab === 'list'" :bills="displayedBills" :sort-mode="sortMode" @edit="handleEdit" />
-        <StatsView
-          v-else
-          :all-bills="bills"
-          :period-key="selectedMonth"
-          :mode="statMode"
-          @select-month="(m) => { selectedMonth = m; activeTab = 'list'; }"
-          @shift-year="(offset) => shiftMonth(offset * 12)"
-        />
+        <BillList :bills="displayedBills" :sort-mode="sortMode" @edit="handleEdit" />
       </view>
     </scroll-view>
 
+    <view class="stats-fab clickable" @click="goToStats">📊</view>
     <view class="add-fab clickable" @click="handleAddNew">+</view>
 
     <AddBillModal
       v-model="showAddModal"
       :editData="editingBill"
-      @manage-cat="(t) => { selectedType = t; showCatManager = true; }"
+      @manage-cat="(t) => { activeType = t; showCatManager = true; }"
       @manage-person="showPersonManager = true"
     />
 
@@ -255,7 +227,7 @@ const handleImportFile = () => {
     <ManagementModals
       v-model:showCat="showCatManager"
       v-model:showPerson="showPersonManager"
-      :type="selectedType"
+      :type="activeType"
     />
 
     <GlobalLoading />
@@ -270,23 +242,9 @@ page { height: 100%; background: var(--theme-page-bg); }
 .ambient-b { width: 420rpx; height: 420rpx; left: -180rpx; top: 460rpx; background: var(--theme-accent-ambient); }
 
 .fixed-header { flex-shrink: 0; padding: 24rpx 32rpx 0; position: relative; z-index: 100; }
-.header-wrap { position: relative; margin-bottom: 18rpx; }
+.header-wrap { position: relative; margin-bottom: 32rpx; }
 .header-actions { position: absolute; right: 12rpx; top: 16rpx; display: flex; gap: 12rpx; }
 .header-btn { width: 68rpx; height: 68rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--theme-surface-strong); border: 1rpx solid rgba(133, 214, 158, 0.42); box-shadow: 0 10rpx 20rpx rgba(52, 101, 65, 0.08); color: var(--theme-primary); font-size: 28rpx; font-weight: 700; }
-
-.view-switcher { display: flex; background: var(--theme-surface); border: 1rpx solid var(--theme-border); border-radius: 999rpx; padding: 6rpx; margin-bottom: 22rpx; backdrop-filter: blur(18rpx); }
-.switch-item { flex: 1; text-align: center; padding: 14rpx 0; font-size: 26rpx; color: var(--theme-text-muted); border-radius: 999rpx; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.7; }
-.switch-item:active { transform: scale(0.96); }
-.switch-item.active { background: var(--theme-surface-strong); color: var(--theme-text); font-weight: 800; opacity: 1; box-shadow: 0 6rpx 16rpx rgba(0, 0, 0, 0.08), 0 2rpx 4rpx rgba(0, 0, 0, 0.04); }
-
-.type-switcher { display: flex; gap: 16rpx; margin-bottom: 22rpx; height: 76rpx; }
-.type-item { flex: 1; text-align: center; line-height: 76rpx; font-size: 26rpx; color: var(--theme-text-muted); border-radius: 999rpx; background: var(--theme-surface); border: 1rpx solid var(--theme-border); transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.8; }
-.type-item:active { transform: scale(0.96); }
-.type-item.active { color: var(--theme-primary); font-weight: 800; background: var(--theme-surface-strong); border-color: var(--theme-primary); opacity: 1; box-shadow: 0 8rpx 20rpx var(--theme-accent-ambient); }
-
-/* 特殊处理：支出和收入选中时的颜色区分 */
-.type-item.active:nth-child(1) { color: var(--theme-expense); border-color: var(--theme-expense); background: var(--theme-expense-soft); }
-.type-item.active:nth-child(2) { color: var(--theme-income); border-color: var(--theme-income); background: var(--theme-income-soft); }
 
 /* 排序栏固定样式 */
 .list-toolbar-fixed {
@@ -331,6 +289,7 @@ page { height: 100%; background: var(--theme-page-bg); }
 }
 
 .add-fab { position: fixed; right: 28rpx; bottom: 34rpx; width: 108rpx; height: 108rpx; border-radius: 50%; background: var(--theme-fab-gradient); color: #fff; text-align: center; line-height: 108rpx; font-size: 68rpx; box-shadow: 0 18rpx 30rpx rgba(71, 126, 88, 0.25); z-index: 20; }
+.stats-fab { position: fixed; right: 28rpx; bottom: 156rpx; width: 108rpx; height: 108rpx; border-radius: 50%; background: var(--theme-fab-gradient); color: #fff; text-align: center; line-height: 108rpx; font-size: 40rpx; font-weight: 700; box-shadow: 0 18rpx 30rpx rgba(71, 126, 88, 0.25); z-index: 20; }
 .backup-mask { position: fixed; inset: 0; z-index: 310; background: rgba(47, 53, 66, 0.56); display: flex; align-items: flex-end; }
 .backup-sheet { width: 100%; background: linear-gradient(180deg, var(--theme-surface-strong) 0%, var(--theme-page-bg) 100%); border-radius: 42rpx 42rpx 0 0; padding: 34rpx 34rpx 40rpx; }
 .backup-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18rpx; }

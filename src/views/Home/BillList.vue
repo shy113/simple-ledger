@@ -81,7 +81,7 @@ const swipeThreshold = 48;
 const sortedBills = computed(() => {
   const list = [...props.bills];
   if (props.sortMode === "amount") {
-    return list.sort((a, b) => b.amount - a.amount || String(b.date).localeCompare(String(a.date)));
+    return list.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount) || String(b.date).localeCompare(String(a.date)));
   }
   return list.sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id - a.id);
 });

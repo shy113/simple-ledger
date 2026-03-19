@@ -11,6 +11,12 @@
       "style": {
         "navigationBarTitleText": "统计明细"
       }
+    },
+    {
+      "path": "pages/stats/index",
+      "style": {
+        "navigationBarTitleText": "统计中心"
+      }
     }
   ],
   "globalStyle": {

@@ -1,5 +1,6 @@
 ﻿import { ref, computed } from 'vue';
 import { getTodayDateString } from '../utils/dateHelper';
+import { useLoading } from './useLoading';
 import type { Bill, Category, Person } from '../types';
 
 type BackupSnapshot = {
@@ -77,6 +78,7 @@ const sanitizePersonList = (items: any): Person[] => {
 };
 
 export function useBills() {
+  const { showLoading, hideLoading } = useLoading();
   const totalExpense = computed(() =>
     bills.value
       .filter((bill) => bill.type === 'expense')
@@ -97,41 +99,45 @@ export function useBills() {
   };
 
   const initData = () => {
-    // 账单加载
-    const b = uni.getStorageSync('my_bills');
-    if (b) {
-      bills.value = JSON.parse(b);
-    } else {
-      bills.value = [];
-      // 如果没有账单，且没有任何分类/成员记录，说明是全新用户，初始化默认值
-      if (!uni.getStorageSync('my_categories') && !uni.getStorageSync('my_persons')) {
+    showLoading('数据初始化中...');
+    setTimeout(() => {
+      // 账单加载
+      const b = uni.getStorageSync('my_bills');
+      if (b) {
+        bills.value = JSON.parse(b);
+      } else {
+        bills.value = [];
+        // 如果没有账单，且没有任何分类/成员记录，说明是全新用户，初始化默认值
+        if (!uni.getStorageSync('my_categories') && !uni.getStorageSync('my_persons')) {
+          sync();
+        }
+      }
+
+      // 分类加载：如果存储里有，就用存储的；否则用默认的
+      const c = uni.getStorageSync('my_categories');
+      if (c) {
+        categories.value = JSON.parse(c);
+      } else {
+        categories.value = {
+          expense: [...defaultCategories.expense],
+          income: [...defaultCategories.income],
+        };
+      }
+
+      // 成员加载：如果存储里有，就用存储的；否则用默认的
+      const p = uni.getStorageSync('my_persons');
+      if (p) {
+        persons.value = JSON.parse(p);
+      } else {
+        persons.value = [...defaultPersons];
+      }
+
+      // 如果是初次运行，同步一次以确保存储中有基础数据
+      if (!c || !p) {
         sync();
       }
-    }
-
-    // 分类加载：如果存储里有，就用存储的；否则用默认的
-    const c = uni.getStorageSync('my_categories');
-    if (c) {
-      categories.value = JSON.parse(c);
-    } else {
-      categories.value = {
-        expense: [...defaultCategories.expense],
-        income: [...defaultCategories.income],
-      };
-    }
-
-    // 成员加载：如果存储里有，就用存储的；否则用默认的
-    const p = uni.getStorageSync('my_persons');
-    if (p) {
-      persons.value = JSON.parse(p);
-    } else {
-      persons.value = [...defaultPersons];
-    }
-
-    // 如果是初次运行，同步一次以确保存储中有基础数据
-    if (!c || !p) {
-      sync();
-    }
+      hideLoading();
+    }, 500);
   };
 
   const addCategory = (type: 'expense' | 'income', cat: Category) => {
@@ -162,18 +168,27 @@ export function useBills() {
   );
 
   const restoreBackupData = (raw: string | Record<string, any>) => {
-    const payload = typeof raw === 'string' ? JSON.parse(raw.replace(/^\ufeff/, '')) : raw;
-    const nextBills = Array.isArray(payload?.bills) ? payload.bills.map(sanitizeBill).filter(Boolean) as Bill[] : [];
-    const nextCategories = payload?.categories && typeof payload.categories === 'object' ? payload.categories : {};
-    const nextPersons = sanitizePersonList(payload?.persons);
+    showLoading('数据导入中...');
+    setTimeout(() => {
+      try {
+        const payload = typeof raw === 'string' ? JSON.parse(raw.replace(/^\ufeff/, '')) : raw;
+        const nextBills = Array.isArray(payload?.bills) ? payload.bills.map(sanitizeBill).filter(Boolean) as Bill[] : [];
+        const nextCategories = payload?.categories && typeof payload.categories === 'object' ? payload.categories : {};
+        const nextPersons = sanitizePersonList(payload?.persons);
 
-    bills.value = nextBills;
-    categories.value = {
-      expense: sanitizeCategoryList(nextCategories.expense),
-      income: sanitizeCategoryList(nextCategories.income),
-    };
-    persons.value = nextPersons;
-    sync();
+        bills.value = nextBills;
+        categories.value = {
+          expense: sanitizeCategoryList(nextCategories.expense),
+          income: sanitizeCategoryList(nextCategories.income),
+        };
+        persons.value = nextPersons;
+        sync();
+      } catch (e) {
+        uni.showToast({ title: '导入失败：数据格式错误', icon: 'none' });
+      } finally {
+        hideLoading();
+      }
+    }, 800);
   };
 
   const isCategoryDeletable = (type: 'expense' | 'income', categoryName: string) => {

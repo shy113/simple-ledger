@@ -10,6 +10,7 @@ import BillList from '../../views/Home/BillList.vue';
 import StatsView from '../../views/Home/StatsView.vue';
 import AddBillModal from '../../views/Home/AddBillModal.vue';
 import ManagementModals from '../../views/Home/ManagementModals.vue';
+import GlobalLoading from '../../components/GlobalLoading.vue';
 
 const { bills, initData, exportBackupData, restoreBackupData } = useBills();
 const { themeVars, currentThemeId, themeOptions, setTheme } = useTheme();
@@ -66,6 +67,11 @@ const viewKey = computed(() => {
 
 const handleAddNew = () => { editingBill.value = null; showAddModal.value = true; };
 const handleEdit = (bill: Bill) => { editingBill.value = bill; showAddModal.value = true; };
+const handleSummaryClick = () => {
+  uni.navigateTo({
+    url: `/pages/stats-detail/index?month=${selectedMonth.value}`
+  });
+};
 const handleMonthChange = (event: any) => {
   const value = event?.detail?.value || '';
   if (value) selectedMonth.value = String(value).slice(0, 7);
@@ -145,26 +151,29 @@ const handleImportFile = () => {
           @prev-month="shiftMonth(-1)"
           @next-month="shiftMonth(1)"
           @pick-month="handleMonthChange"
+          @click-balance="handleSummaryClick"
+          @click-income="activeTab = 'list'; selectedType = 'income'"
+          @click-expense="activeTab = 'list'; selectedType = 'expense'"
         />
         <view class="header-actions">
-          <view class="header-btn" @click="toggleTheme">🎨</view>
-          <view class="header-btn" @click="showBackupModal = true">备</view>
+          <view class="header-btn clickable" @click="toggleTheme">🎨</view>
+          <view class="header-btn clickable" @click="showBackupModal = true">备</view>
         </view>
       </view>
 
       <view class="view-switcher">
-        <view :class="['switch-item', activeTab === 'list' ? 'active' : '']" @click="activeTab = 'list'">明细</view>
-        <view :class="['switch-item', activeTab === 'stats' ? 'active' : '']" @click="activeTab = 'stats'">统计</view>
+        <view :class="['switch-item clickable', activeTab === 'list' ? 'active' : '']" @click="activeTab = 'list'">明细</view>
+        <view :class="['switch-item clickable', activeTab === 'stats' ? 'active' : '']" @click="activeTab = 'stats'">统计</view>
       </view>
 
       <view class="type-switcher">
         <template v-if="activeTab === 'list'">
-          <view :class="['type-item', selectedType === 'expense' ? 'active' : '']" @click="selectedType = 'expense'">支出</view>
-          <view :class="['type-item', selectedType === 'income' ? 'active' : '']" @click="selectedType = 'income'">收入</view>
+          <view :class="['type-item clickable', selectedType === 'expense' ? 'active' : '']" @click="selectedType = 'expense'">支出</view>
+          <view :class="['type-item clickable', selectedType === 'income' ? 'active' : '']" @click="selectedType = 'income'">收入</view>
         </template>
         <template v-else>
-          <view :class="['type-item', statMode === 'month' ? 'active' : '']" @click="statMode = 'month'">月度(支出)</view>
-          <view :class="['type-item', statMode === 'year' ? 'active' : '']" @click="statMode = 'year'">年度(支出)</view>
+          <view :class="['type-item clickable', statMode === 'month' ? 'active' : '']" @click="statMode = 'month'">月度(支出)</view>
+          <view :class="['type-item clickable', statMode === 'year' ? 'active' : '']" @click="statMode = 'year'">年度(支出)</view>
         </template>
       </view>
 
@@ -175,8 +184,8 @@ const handleImportFile = () => {
           <text class="toolbar-hint">当前：{{ sortMode === "date" ? "按日期" : "按金额" }}</text>
         </view>
         <view class="sort-toggle">
-          <view :class="['sort-pill', sortMode === 'date' ? 'active' : '']" @click="sortMode = 'date'">按日期</view>
-          <view :class="['sort-pill', sortMode === 'amount' ? 'active' : '']" @click="sortMode = 'amount'">按金额</view>
+          <view :class="['sort-pill clickable', sortMode === 'date' ? 'active' : '']" @click="sortMode = 'date'">按日期</view>
+          <view :class="['sort-pill clickable', sortMode === 'amount' ? 'active' : '']" @click="sortMode = 'amount'">按金额</view>
         </view>
       </view>
     </view>
@@ -184,11 +193,17 @@ const handleImportFile = () => {
     <scroll-view class="scroll-content" scroll-y>
       <view :key="viewKey" class="view-content-wrap fade-in">
         <BillList v-if="activeTab === 'list'" :bills="displayedBills" :sort-mode="sortMode" @edit="handleEdit" />
-        <StatsView v-else :all-bills="bills" :period-key="selectedMonth" :mode="statMode" />
+        <StatsView
+          v-else
+          :all-bills="bills"
+          :period-key="selectedMonth"
+          :mode="statMode"
+          @select-month="(m) => { selectedMonth = m; activeTab = 'list'; }"
+        />
       </view>
     </scroll-view>
 
-    <view class="add-fab" @click="handleAddNew">+</view>
+    <view class="add-fab clickable" @click="handleAddNew">+</view>
 
     <AddBillModal
       v-model="showAddModal"
@@ -204,19 +219,19 @@ const handleImportFile = () => {
           <text class="backup-close" @click="closeBackupModal">×</text>
         </view>
         <view v-if="backupStep === 'main'" class="backup-grid">
-          <view class="backup-card export-card" @click="handleBackupExport">
+          <view class="backup-card export-card clickable" @click="handleBackupExport">
             <text class="backup-card-title">导出备份</text>
             <text class="backup-card-subtitle">复制 JSON 到剪贴板</text>
           </view>
-          <view class="backup-card import-card" @click="backupStep = 'import'">
+          <view class="backup-card import-card clickable" @click="backupStep = 'import'">
             <text class="backup-card-title">导入备份</text>
             <text class="backup-card-subtitle">从剪贴板或文件恢复</text>
           </view>
         </view>
         <view v-else class="backup-import-panel">
-          <view class="backup-import-row" @click="handleImportClipboard"><text>从剪贴板导入</text></view>
-          <view class="backup-import-row" @click="handleImportFile"><text>从文件导入</text></view>
-          <view class="backup-back" @click="backupStep = 'main'"><text class="backup-back-text">返回</text></view>
+          <view class="backup-import-row clickable" @click="handleImportClipboard"><text>从剪贴板导入</text></view>
+          <view class="backup-import-row clickable" @click="handleImportFile"><text>从文件导入</text></view>
+          <view class="backup-back clickable" @click="backupStep = 'main'"><text class="backup-back-text">返回</text></view>
         </view>
       </view>
     </view>
@@ -226,6 +241,8 @@ const handleImportFile = () => {
       v-model:showPerson="showPersonManager"
       :type="selectedType"
     />
+
+    <GlobalLoading />
   </view>
 </template>
 

@@ -1,32 +1,35 @@
 ﻿<template>
   <view class="header-card">
-    <view class="balance-amount">¥ {{ (balance ?? 0).toFixed(2) }}</view>
+    <view class="balance-area clickable" @click="$emit('click-balance')">
+      <view class="balance-label">本月结余</view>
+      <view class="balance-amount">¥ {{ (balance ?? 0).toFixed(2) }}</view>
+    </view>
 
     <view class="summary-row">
-      <view class="summary-item">
+      <view class="summary-item clickable" @click="$emit('click-income')">
         <text class="label">收入</text>
         <text class="value income">+{{ (income ?? 0).toFixed(2) }}</text>
       </view>
-      <view class="summary-item">
+      <view class="summary-item clickable" @click="$emit('click-expense')">
         <text class="label">支出</text>
         <text class="value expense">-{{ (expense ?? 0).toFixed(2) }}</text>
       </view>
     </view>
 
     <view class="month-controls">
-      <view class="month-nav-btn" @click="$emit('prev-month')">上一月</view>
+      <view class="month-nav-btn clickable" @click.stop="$emit('prev-month')">上一月</view>
       <picker
         mode="date"
         fields="month"
         :value="pickerValue"
         @change="$emit('pick-month', $event)"
       >
-        <view class="month-selector">
+        <view class="month-selector clickable">
           <text class="month-selector-text">{{ periodLabel }}</text>
           <text class="month-selector-icon">▾</text>
         </view>
       </picker>
-      <view class="month-nav-btn" @click="$emit('next-month')">下一月</view>
+      <view class="month-nav-btn clickable" @click.stop="$emit('next-month')">下一月</view>
     </view>
   </view>
 </template>
@@ -44,6 +47,9 @@ defineEmits<{
   (e: "prev-month"): void;
   (e: "next-month"): void;
   (e: "pick-month", event: any): void;
+  (e: "click-balance"): void;
+  (e: "click-income"): void;
+  (e: "click-expense"): void;
 }>();
 </script>
 
@@ -59,25 +65,40 @@ defineEmits<{
   backdrop-filter: blur(20rpx);
 }
 
+.balance-area {
+  margin-bottom: 22rpx;
+  padding: 10rpx;
+  margin: -10rpx -10rpx 12rpx -10rpx;
+  border-radius: 20rpx;
+}
+
+.balance-label {
+  font-size: 24rpx;
+  color: var(--theme-text-muted);
+  margin-bottom: 4rpx;
+}
+
 .balance-amount {
   font-size: 70rpx;
   font-weight: bold;
   letter-spacing: 0.01em;
   color: var(--theme-text);
-  margin-bottom: 22rpx;
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
   border-top: 1rpx solid rgba(215, 232, 221, 0.95);
-  padding-top: 26rpx;
+  padding-top: 20rpx;
   margin-bottom: 18rpx;
 }
 
 .summary-item {
   display: flex;
   flex-direction: column;
+  padding: 12rpx 24rpx;
+  margin: -12rpx;
+  border-radius: 20rpx;
 }
 
 .label {

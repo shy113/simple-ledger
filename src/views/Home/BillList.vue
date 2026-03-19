@@ -28,7 +28,7 @@
         @touchcancel="handleTouchCancel"
       >
         <view class="bill-swipe-inner" :style="getSwipeStyle(bill.id)">
-          <view class="bill-item" @tap="handleItemTap(bill)">
+          <view class="bill-item clickable" @tap="handleItemTap(bill)">
             <view class="bill-icon">
               {{ getIcon(bill.category) }}
               <view class="bill-avatar-badge">{{ bill.personAvatar }}</view>
@@ -44,7 +44,7 @@
               {{ bill.type === "expense" ? "-" : "+" }}{{ bill.amount.toFixed(2) }}
             </view>
           </view>
-          <view class="delete-panel" @tap.stop="handleDelete(bill.id)">
+          <view class="delete-panel clickable" @tap.stop="handleDelete(bill.id)">
             <text class="delete-text">删除</text>
           </view>
         </view>

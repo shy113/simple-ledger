@@ -34,9 +34,14 @@
 
           <!-- ② 年度趋势图 -->
           <view class="stats-card staggered-item" style="--delay: 2">
-            <view class="card-head">年度趋势</view>
+            <view class="card-head">年度趋势 (点击柱形可跳转)</view>
             <view class="chart-container">
-              <view v-for="item in monthlyTrend" :key="item.month" class="chart-bar-wrap">
+              <view
+                v-for="item in monthlyTrend"
+                :key="item.month"
+                class="chart-bar-wrap clickable"
+                @click="item.amount > 0 && $emit('select-month', `${currentYear}-${String(item.month).padStart(2, '0')}`)"
+              >
                 <view class="bar-outer">
                   <view class="bar-inner" :class="{ 'is-max': item.isMax }" :style="{ height: item.height + '%' }">
                     <text v-if="item.isMax && item.amount > 0" class="bar-tooltip">¥{{ item.amount.toFixed(0) }}</text>
@@ -46,26 +51,18 @@
               </view>
             </view>
           </view>
-
-          <!-- ③ 月度摘要列表 -->
-          <view class="stats-card staggered-item" style="--delay: 3">
-            <view class="card-head">月度摘要</view>
-            <view v-for="(item, index) in monthlyTrend.filter(i => i.amount > 0).slice().reverse()" :key="item.month" class="stat-line">
-              <view class="line-info">
-                <text class="item-name">{{ item.month }}月</text>
-                <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
-              </view>
-              <view class="progress-bar">
-                <view class="progress-fill expense-bg" :style="{ width: (item.amount / insights.totalYearExpense * 100) + '%' }"></view>
-              </view>
-            </view>
-          </view>
         </view>
 
         <!-- B. 通用排行视图 -->
-        <view class="stats-card staggered-item" :style="{ '--delay': mode === 'year' ? 4 : 1 }">
+        <view class="stats-card staggered-item" :style="{ '--delay': mode === 'year' ? 3 : 1 }">
           <view class="card-head">分类排行</view>
-          <view v-for="(item, index) in categoryStats" :key="item.name" class="stat-line staggered-item clickable" :style="{ '--delay': (mode === 'year' ? 4 : 1) + (index * 0.1) }" @click="openDetail('category', item.name)">
+          <view
+            v-for="(item, index) in categoryStats"
+            :key="item.name"
+            class="stat-line staggered-item clickable"
+            :style="{ '--delay': (mode === 'year' ? 3 : 1) + index * 0.1 }"
+            @click="openDetail('category', item.name)"
+          >
             <view class="line-info">
               <text class="item-name">{{ item.icon }} {{ item.name }}</text>
               <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
@@ -76,9 +73,15 @@
           </view>
         </view>
 
-        <view class="stats-card staggered-item" :style="{ '--delay': mode === 'year' ? 5 : 2 }">
+        <view class="stats-card staggered-item" :style="{ '--delay': mode === 'year' ? 4 : 2 }">
           <view class="card-head">成员排行</view>
-          <view v-for="(item, index) in memberStats" :key="item.name" class="stat-line staggered-item clickable" :style="{ '--delay': (mode === 'year' ? 5 : 2) + (index * 0.1) }" @click="openDetail('person', item.name)">
+          <view
+            v-for="(item, index) in memberStats"
+            :key="item.name"
+            class="stat-line staggered-item clickable"
+            :style="{ '--delay': (mode === 'year' ? 4 : 2) + index * 0.1 }"
+            @click="openDetail('person', item.name)"
+          >
             <view class="line-info">
               <text class="item-name">{{ item.avatar }} {{ item.name }}</text>
               <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>

@@ -27,7 +27,9 @@
             <view class="insight-content">
               <text class="insight-label">月度最高</text>
               <text class="insight-value">{{ insights.maxMonth.month }}月</text>
-              <text class="insight-desc">¥{{ insights.maxMonth.amount.toFixed(0) }}</text>
+              <text class="insight-desc"
+                >¥{{ insights.maxMonth.amount.toFixed(0) }}</text
+              >
             </view>
           </view>
           <view class="insight-card">
@@ -35,7 +37,9 @@
             <view class="insight-content">
               <text class="insight-label">最常消费</text>
               <text class="insight-value">{{ insights.topCategory.name }}</text>
-              <text class="insight-desc">占比 {{ insights.topCategory.percent.toFixed(0) }}%</text>
+              <text class="insight-desc"
+                >占比 {{ insights.topCategory.percent.toFixed(0) }}%</text
+              >
             </view>
           </view>
           <view class="insight-card">
@@ -43,7 +47,9 @@
             <view class="insight-content">
               <text class="insight-label">勤俭节约</text>
               <text class="insight-value">{{ insights.minMonth.month }}月</text>
-              <text class="insight-desc">¥{{ insights.minMonth.amount.toFixed(0) }}</text>
+              <text class="insight-desc"
+                >¥{{ insights.minMonth.amount.toFixed(0) }}</text
+              >
             </view>
           </view>
         </view>
@@ -63,7 +69,9 @@
                   :class="{ 'is-max': item.isMax }"
                   :style="{ height: item.height + '%' }"
                 >
-                  <text v-if="item.isMax && item.amount > 0" class="bar-tooltip">¥{{ item.amount.toFixed(0) }}</text>
+                  <text v-if="item.isMax && item.amount > 0" class="bar-tooltip"
+                    >¥{{ item.amount.toFixed(0) }}</text
+                  >
                 </view>
               </view>
               <text class="bar-label">{{ item.month }}月</text>
@@ -75,7 +83,10 @@
         <view class="stats-card">
           <view class="card-head">月度摘要</view>
           <view
-            v-for="item in monthlyTrend.filter(i => i.amount > 0).slice().reverse()"
+            v-for="item in monthlyTrend
+              .filter((i) => i.amount > 0)
+              .slice()
+              .reverse()"
             :key="item.month"
             class="stat-line"
           >
@@ -84,7 +95,12 @@
               <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
             </view>
             <view class="progress-bar">
-              <view class="progress-fill expense-bg" :style="{ width: (item.amount / insights.totalYearExpense * 100) + '%' }"></view>
+              <view
+                class="progress-fill expense-bg"
+                :style="{
+                  width: (item.amount / insights.totalYearExpense) * 100 + '%',
+                }"
+              ></view>
             </view>
           </view>
         </view>
@@ -104,7 +120,10 @@
             <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
           </view>
           <view class="progress-bar">
-            <view class="progress-fill expense-bg" :style="{ width: item.percent + '%' }"></view>
+            <view
+              class="progress-fill expense-bg"
+              :style="{ width: item.percent + '%' }"
+            ></view>
           </view>
         </view>
       </view>
@@ -122,7 +141,10 @@
             <text class="item-amount">¥{{ item.amount.toFixed(2) }}</text>
           </view>
           <view class="progress-bar">
-            <view class="progress-fill member-bg" :style="{ width: item.percent + '%' }"></view>
+            <view
+              class="progress-fill member-bg"
+              :style="{ width: item.percent + '%' }"
+            ></view>
           </view>
         </view>
       </view>
@@ -135,7 +157,9 @@
         <view class="empty-circle"></view>
       </view>
       <text class="empty-title">暂无支出记录</text>
-      <text class="empty-tips">在这个{{ statMode === 'year' ? '年' : '月' }}份，你还没有记过账呢</text>
+      <text class="empty-tips"
+        >在这个{{ statMode === "year" ? "年" : "月" }}份，你还没有记过账呢</text
+      >
       <view class="empty-footer">
         <text>保持记录，是为了更好地生活</text>
       </view>
@@ -144,34 +168,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useBills } from '../../composables/useBills';
-import { getMonthKeyFromDate } from '../../utils/dateHelper';
-import type { Bill } from '../../types';
+import { ref, computed } from "vue";
+import { useBills } from "../../composables/useBills";
+import { getMonthKeyFromDate } from "../../utils/dateHelper";
+import type { Bill } from "../../types";
 
 const props = defineProps<{ allBills: Bill[]; periodKey: string }>();
 
 const { categories, persons } = useBills();
 
 // 统计维度状态
-const statMode = ref<'month' | 'year'>('month');
+const statMode = ref<"month" | "year">("month");
 
-const currentYear = computed(() => props.periodKey.split('-')[0]);
+const currentYear = computed(() => props.periodKey.split("-")[0]);
 
 const yearBills = computed(() => {
-  return props.allBills.filter(bill => String(bill.date).startsWith(currentYear.value));
+  return props.allBills.filter((bill) =>
+    String(bill.date).startsWith(currentYear.value),
+  );
 });
 
 const monthBills = computed(() => {
-  return props.allBills.filter(bill => getMonthKeyFromDate(String(bill.date)) === props.periodKey);
+  return props.allBills.filter(
+    (bill) => getMonthKeyFromDate(String(bill.date)) === props.periodKey,
+  );
 });
 
 const currentBills = computed(() => {
-  return statMode.value === 'month' ? monthBills.value : yearBills.value;
+  return statMode.value === "month" ? monthBills.value : yearBills.value;
 });
 
-const expenseBills = computed(() => currentBills.value.filter((bill) => bill.type === 'expense'));
-const totalExpense = computed(() => expenseBills.value.reduce((sum, bill) => sum + bill.amount, 0));
+const expenseBills = computed(() =>
+  currentBills.value.filter((bill) => bill.type === "expense"),
+);
+const totalExpense = computed(() =>
+  expenseBills.value.reduce((sum, bill) => sum + bill.amount, 0),
+);
 
 const monthlyTrend = computed(() => {
   const year = currentYear.value;
@@ -179,24 +211,28 @@ const monthlyTrend = computed(() => {
   let maxAmount = 0;
 
   for (let m = 1; m <= 12; m++) {
-    const monthStr = `${year}-${String(m).padStart(2, '0')}`;
+    const monthStr = `${year}-${String(m).padStart(2, "0")}`;
     const amount = yearBills.value
-      .filter(bill => {
-        const bDate = String(bill.date || '').trim();
-        return bill.type === 'expense' && bDate.startsWith(monthStr);
+      .filter((bill) => {
+        const bDate = String(bill.date || "").trim();
+        return bill.type === "expense" && bDate.startsWith(monthStr);
       })
       .reduce((sum, bill) => sum + bill.amount, 0);
-    
+
     if (amount > maxAmount) maxAmount = amount;
     trend.push({ month: m, amount });
   }
 
-  return trend.map(item => {
+  return trend.map((item) => {
     let height = 0;
     if (maxAmount > 0 && item.amount > 0) {
       height = Math.max(4, (item.amount / maxAmount) * 100);
     }
-    return { ...item, height, isMax: maxAmount > 0 && item.amount === maxAmount };
+    return {
+      ...item,
+      height,
+      isMax: maxAmount > 0 && item.amount === maxAmount,
+    };
   });
 });
 
@@ -204,14 +240,20 @@ const insights = computed(() => {
   const trend = monthlyTrend.value;
   const totalYearExpense = trend.reduce((sum, item) => sum + item.amount, 0);
   const maxMonth = [...trend].sort((a, b) => b.amount - a.amount)[0];
-  const activeMonths = trend.filter(item => item.amount > 0);
-  const minMonth = activeMonths.length > 0 ? [...activeMonths].sort((a, b) => a.amount - b.amount)[0] : trend[0];
+  const activeMonths = trend.filter((item) => item.amount > 0);
+  const minMonth =
+    activeMonths.length > 0
+      ? [...activeMonths].sort((a, b) => a.amount - b.amount)[0]
+      : trend[0];
 
   const catMap: Record<string, number> = {};
-  yearBills.value.filter(b => b.type === 'expense').forEach(b => {
-    catMap[b.category] = (catMap[b.category] || 0) + b.amount;
-  });
-  const topCatName = Object.keys(catMap).sort((a, b) => catMap[b] - catMap[a])[0] || '无';
+  yearBills.value
+    .filter((b) => b.type === "expense")
+    .forEach((b) => {
+      catMap[b.category] = (catMap[b.category] || 0) + b.amount;
+    });
+  const topCatName =
+    Object.keys(catMap).sort((a, b) => catMap[b] - catMap[a])[0] || "无";
   const topCatAmount = catMap[topCatName] || 0;
 
   return {
@@ -220,8 +262,9 @@ const insights = computed(() => {
     minMonth,
     topCategory: {
       name: topCatName,
-      percent: totalYearExpense > 0 ? (topCatAmount / totalYearExpense) * 100 : 0
-    }
+      percent:
+        totalYearExpense > 0 ? (topCatAmount / totalYearExpense) * 100 : 0,
+    },
   };
 });
 
@@ -231,12 +274,15 @@ const categoryStats = computed(() => {
   expenseBills.value.forEach((bill) => {
     statsMap[bill.category] = (statsMap[bill.category] || 0) + bill.amount;
   });
-  return Object.keys(statsMap).map((name) => ({
-    name,
-    icon: categories.value.expense.find((cat) => cat.name === name)?.icon || '📒',
-    amount: statsMap[name],
-    percent: (statsMap[name] / totalExpense.value) * 100,
-  })).sort((a, b) => b.amount - a.amount);
+  return Object.keys(statsMap)
+    .map((name) => ({
+      name,
+      icon:
+        categories.value.expense.find((cat) => cat.name === name)?.icon || "📒",
+      amount: statsMap[name],
+      percent: (statsMap[name] / totalExpense.value) * 100,
+    }))
+    .sort((a, b) => b.amount - a.amount);
 });
 
 const memberStats = computed(() => {
@@ -245,91 +291,313 @@ const memberStats = computed(() => {
   expenseBills.value.forEach((bill) => {
     statsMap[bill.personName] = (statsMap[bill.personName] || 0) + bill.amount;
   });
-  return Object.keys(statsMap).map((name) => ({
-    name,
-    avatar: persons.value.find((person) => person.name === name)?.avatar || '👤',
-    amount: statsMap[name],
-    percent: (statsMap[name] / totalExpense.value) * 100,
-  })).sort((a, b) => b.amount - a.amount);
+  return Object.keys(statsMap)
+    .map((name) => ({
+      name,
+      avatar:
+        persons.value.find((person) => person.name === name)?.avatar || "👤",
+      amount: statsMap[name],
+      percent: (statsMap[name] / totalExpense.value) * 100,
+    }))
+    .sort((a, b) => b.amount - a.amount);
 });
 
-const openDetail = (kind: 'category' | 'person', name: string) => {
+const openDetail = (kind: "category" | "person", name: string) => {
   const query = `kind=${encodeURIComponent(kind)}&name=${encodeURIComponent(name)}&month=${encodeURIComponent(props.periodKey)}`;
   uni.navigateTo({ url: `/pages/stats-detail/index?${query}` });
 };
 </script>
 
 <style scoped>
-.stats-container { padding-bottom: 40rpx; }
+.stats-container {
+  padding-bottom: 40rpx;
+}
 
 /* 动画 */
-.fade-in { animation: fadeIn 0.4s ease-out; }
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10rpx); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 维度切换 */
-.mode-toggle { display: flex; gap: 12rpx; margin-bottom: 30rpx; }
-.mode-item { flex: 1; text-align: center; padding: 16rpx 0; font-size: 26rpx; color: var(--theme-text-muted); border-radius: 999rpx; background: var(--theme-surface); border: 1rpx solid var(--theme-border); transition: all 0.24s ease; }
-.mode-item.active { color: var(--theme-primary); font-weight: 700; background: var(--theme-surface-strong); border-color: var(--theme-primary); box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08); }
+.mode-toggle {
+  display: flex;
+  gap: 12rpx;
+  margin-bottom: 30rpx;
+}
+.mode-item {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 26rpx;
+  color: var(--theme-text-muted);
+  border-radius: 999rpx;
+  background: var(--theme-surface);
+  border: 1rpx solid var(--theme-border);
+  transition: all 0.24s ease;
+}
+.mode-item.active {
+  color: var(--theme-primary);
+  font-weight: 700;
+  background: var(--theme-surface-strong);
+  border-color: var(--theme-primary);
+  box-shadow: 0 6rpx 16rpx rgba(52, 101, 65, 0.08);
+}
 
 /* 空白页占位 (到底设计) */
 .empty-placeholder-card {
-  flex: 1; /* 自动占据剩余高度 */
-  min-height: 400rpx; /* 设一个较小的保底值 */
-  background: var(--theme-card-gradient);
-  border: 1rpx solid var(--theme-border);
-  border-radius: 48rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  flex: 1;
+  min-height: 800rpx; /* 统一保底高度 */
+  background: var(--theme-card-gradient);
+  border: 1rpx solid var(--theme-border);
+  border-radius: 42rpx; /* 统一圆角 */
   padding: 60rpx 40rpx;
   box-shadow: var(--theme-card-shadow);
   backdrop-filter: blur(20rpx);
+  margin: 0 4rpx; /* 稍微内缩，对齐明细页卡片 */
 }
-.empty-icon-wrap { position: relative; width: 200rpx; height: 200rpx; display: flex; align-items: center; justify-content: center; margin-bottom: 40rpx; }
-.empty-emoji { font-size: 100rpx; z-index: 2; }
-.empty-circle { position: absolute; width: 140rpx; height: 140rpx; background: var(--theme-primary-soft); border-radius: 50%; animation: pulse 2s infinite; }
+.empty-icon-wrap {
+  position: relative;
+  width: 200rpx;
+  height: 200rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40rpx;
+}
+.empty-emoji {
+  font-size: 100rpx;
+  z-index: 2;
+}
+.empty-circle {
+  position: absolute;
+  width: 140rpx;
+  height: 140rpx;
+  background: var(--theme-primary-soft);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
 @keyframes pulse {
-  0% { transform: scale(0.95); opacity: 0.5; }
-  50% { transform: scale(1.1); opacity: 0.2; }
-  100% { transform: scale(0.95); opacity: 0.5; }
+  0% {
+    transform: scale(0.95);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.5;
+  }
 }
-.empty-title { font-size: 36rpx; font-weight: 700; color: var(--theme-text); margin-bottom: 16rpx; }
-.empty-tips { font-size: 26rpx; color: var(--theme-text-muted); margin-bottom: 80rpx; }
-.empty-footer { border-top: 1rpx solid var(--theme-border); padding-top: 40rpx; width: 80%; text-align: center; }
-.empty-footer text { font-size: 22rpx; color: var(--theme-text-muted); letter-spacing: 2rpx; font-style: italic; }
+.empty-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+  margin-bottom: 16rpx;
+}
+.empty-tips {
+  font-size: 26rpx;
+  color: var(--theme-text-muted);
+  margin-bottom: 80rpx;
+}
+.empty-footer {
+  border-top: 1rpx solid var(--theme-border);
+  padding-top: 40rpx;
+  width: 80%;
+  text-align: center;
+}
+.empty-footer text {
+  font-size: 22rpx;
+  color: var(--theme-text-muted);
+  letter-spacing: 2rpx;
+  font-style: italic;
+}
 
 /* 趋势图与看板 */
-.insights-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; margin-bottom: 30rpx; }
-.insight-card { background: var(--theme-insight-card-bg); border: 1rpx solid var(--theme-border); border-radius: 28rpx; padding: 20rpx 10rpx; display: flex; flex-direction: column; align-items: center; backdrop-filter: blur(10px); }
-.insight-icon { width: 64rpx; height: 64rpx; background: var(--theme-insight-icon-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32rpx; margin-bottom: 12rpx; }
-.insight-content { text-align: center; }
-.insight-label { font-size: 20rpx; color: var(--theme-text-muted); margin-bottom: 4rpx; display: block; }
-.insight-value { font-size: 26rpx; font-weight: 700; color: var(--theme-text); }
-.insight-desc { font-size: 20rpx; color: var(--theme-text-muted); margin-top: 2rpx; display: block; }
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+  margin-bottom: 30rpx;
+}
+.insight-card {
+  background: var(--theme-insight-card-bg);
+  border: 1rpx solid var(--theme-border);
+  border-radius: 28rpx;
+  padding: 20rpx 10rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  backdrop-filter: blur(10px);
+}
+.insight-icon {
+  width: 64rpx;
+  height: 64rpx;
+  background: var(--theme-insight-icon-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  margin-bottom: 12rpx;
+}
+.insight-content {
+  text-align: center;
+}
+.insight-label {
+  font-size: 20rpx;
+  color: var(--theme-text-muted);
+  margin-bottom: 4rpx;
+  display: block;
+}
+.insight-value {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+.insight-desc {
+  font-size: 20rpx;
+  color: var(--theme-text-muted);
+  margin-top: 2rpx;
+  display: block;
+}
 
-.chart-container { height: 240rpx; display: flex; align-items: flex-end; justify-content: space-between; padding: 40rpx 10rpx 10rpx; }
-.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
-.bar-outer { width: 24rpx; height: 160rpx; background: #f0f2f5; border-radius: 999rpx; display: flex; align-items: flex-end; position: relative; }
-.bar-inner { width: 100%; background-color: var(--theme-primary); border-radius: 999rpx; transition: height 1s cubic-bezier(0.165, 0.84, 0.44, 1); position: relative; opacity: 0.3; }
-.bar-inner.is-max { opacity: 1; background-color: var(--theme-primary); }
-.bar-tooltip { position: absolute; top: -40rpx; left: 50%; transform: translateX(-50%); font-size: 20rpx; color: var(--theme-primary); white-space: nowrap; font-weight: 700; z-index: 5; }
-.bar-label { font-size: 18rpx; color: var(--theme-text-muted); margin-top: 12rpx; }
+.chart-container {
+  height: 240rpx;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 40rpx 10rpx 10rpx;
+}
+.chart-bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+.bar-outer {
+  width: 24rpx;
+  height: 160rpx;
+  background: #f0f2f5;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+}
+.bar-inner {
+  width: 100%;
+  background-color: var(--theme-primary);
+  border-radius: 999rpx;
+  transition: height 1s cubic-bezier(0.165, 0.84, 0.44, 1);
+  position: relative;
+  opacity: 0.3;
+}
+.bar-inner.is-max {
+  opacity: 1;
+  background-color: var(--theme-primary);
+}
+.bar-tooltip {
+  position: absolute;
+  top: -40rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 20rpx;
+  color: var(--theme-primary);
+  white-space: nowrap;
+  font-weight: 700;
+  z-index: 5;
+}
+.bar-label {
+  font-size: 18rpx;
+  color: var(--theme-text-muted);
+  margin-top: 12rpx;
+}
 
 /* 通用卡片与排行 */
-.stats-card { background: var(--theme-card-gradient); border: 1rpx solid var(--theme-border); border-radius: 36rpx; padding: 34rpx 30rpx; margin-bottom: 24rpx; box-shadow: var(--theme-card-shadow); backdrop-filter: blur(18rpx); }
-.card-head { font-size: 28rpx; font-weight: 700; color: var(--theme-text-muted); margin-bottom: 24rpx; letter-spacing: 0.02em; }
-.stat-line { margin-bottom: 24rpx; padding: 14rpx 14rpx 16rpx; border-radius: 22rpx; }
-.stat-line:last-child { margin-bottom: 0; }
-.clickable:active { transform: scale(0.995); opacity: 0.95; background: var(--theme-primary-soft); }
-.line-info { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10rpx; }
-.item-name { font-size: 30rpx; color: var(--theme-text); font-weight: 700; }
-.item-amount { font-size: 30rpx; font-weight: 700; color: var(--theme-text); }
-.progress-bar { height: 10rpx; background: var(--theme-surface-soft); border-radius: 999rpx; overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 999rpx; transition: width 0.6s ease; }
-.expense-bg { background: linear-gradient(90deg, var(--theme-expense) 0%, var(--theme-expense-soft) 100%); }
-.member-bg { background: linear-gradient(90deg, var(--theme-primary) 0%, var(--theme-primary-soft) 100%); }
+.stats-card {
+  background: var(--theme-card-gradient);
+  border: 1rpx solid var(--theme-border);
+  border-radius: 36rpx;
+  padding: 34rpx 30rpx;
+  margin-bottom: 24rpx;
+  box-shadow: var(--theme-card-shadow);
+  backdrop-filter: blur(18rpx);
+}
+.card-head {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: var(--theme-text-muted);
+  margin-bottom: 24rpx;
+  letter-spacing: 0.02em;
+}
+.stat-line {
+  margin-bottom: 24rpx;
+  padding: 14rpx 14rpx 16rpx;
+  border-radius: 22rpx;
+}
+.stat-line:last-child {
+  margin-bottom: 0;
+}
+.clickable:active {
+  transform: scale(0.995);
+  opacity: 0.95;
+  background: var(--theme-primary-soft);
+}
+.line-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+.item-name {
+  font-size: 30rpx;
+  color: var(--theme-text);
+  font-weight: 700;
+}
+.item-amount {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+.progress-bar {
+  height: 10rpx;
+  background: var(--theme-surface-soft);
+  border-radius: 999rpx;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  transition: width 0.6s ease;
+}
+.expense-bg {
+  background: linear-gradient(
+    90deg,
+    var(--theme-expense) 0%,
+    var(--theme-expense-soft) 100%
+  );
+}
+.member-bg {
+  background: linear-gradient(
+    90deg,
+    var(--theme-primary) 0%,
+    var(--theme-primary-soft) 100%
+  );
+}
 </style>

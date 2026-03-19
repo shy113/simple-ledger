@@ -244,8 +244,8 @@ const handleImportFile = () => {
         />
       </view>
     </scroll-view>
-
-    <view class="stats-fab clickable" @click="goToStats">📊</view>
+    <!-- TODO:统计页面后续开发 -->
+    <view v-if="false" class="stats-fab clickable" @click="goToStats">📊</view>
     <view class="add-fab clickable" @click="handleAddNew">+</view>
 
     <AddBillModal

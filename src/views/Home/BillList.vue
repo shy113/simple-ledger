@@ -2,7 +2,7 @@
   <view class="list-content-card">
     <view class="list-content-wrap">
       <!-- 空白页占位 -->
-      <view v-if="sortedBills.length === 0" class="empty-placeholder">
+      <view v-if="sortedBills.length === 0" class="empty-placeholder staggered-item" style="--delay: 1">
         <view class="empty-icon-wrap">
           <text class="empty-emoji">🫧</text>
           <view class="empty-circle"></view>

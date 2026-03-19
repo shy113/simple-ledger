@@ -45,14 +45,16 @@
           v-model="newCat.icon"
           placeholder="图标"
           confirm-type="done"
-          :adjust-position="false"
+          :adjust-position="true"
+          :cursor-spacing="70"
         />
         <input
           class="flex-input"
           v-model="newCat.name"
           placeholder="分类名"
           confirm-type="done"
-          :adjust-position="false"
+          :adjust-position="true"
+          :cursor-spacing="70"
         />
         <button v-if="editingCatIndex === -1" class="add-action" @click="handleAddCat">添加</button>
         <view v-else class="edit-actions">
@@ -111,14 +113,16 @@
           v-model="newPerson.avatar"
           placeholder="头像"
           confirm-type="done"
-          :adjust-position="false"
+          :adjust-position="true"
+          :cursor-spacing="70"
         />
         <input
           class="flex-input"
           v-model="newPerson.name"
           placeholder="姓名"
           confirm-type="done"
-          :adjust-position="false"
+          :adjust-position="true"
+          :cursor-spacing="70"
         />
         <button v-if="editingPersonIndex === -1" class="add-action" @click="handleAddPerson">添加</button>
         <view v-else class="edit-actions">

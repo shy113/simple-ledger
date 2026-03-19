@@ -40,7 +40,7 @@
             placeholder="0.00"
             confirm-type="done"
             :adjust-position="true"
-            :cursor-spacing="20"
+            :cursor-spacing="70"
           />
         </view>
 
@@ -51,7 +51,7 @@
             placeholder="备注（可选）"
             confirm-type="done"
             :adjust-position="true"
-            :cursor-spacing="20"
+            :cursor-spacing="70"
           />
         </view>
 
@@ -67,7 +67,7 @@
               placeholder="输入如 0318"
               confirm-type="done"
               :adjust-position="true"
-              :cursor-spacing="20"
+              :cursor-spacing="70"
             />
             <text class="today-tag" @click="setToday">📍</text>
           </view>

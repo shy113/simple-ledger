@@ -20,7 +20,7 @@
         v-for="(bill, index) in sortedBills"
         :key="bill.id"
         class="bill-swipe staggered-item"
-        :style="{ '--delay': index }"
+        :style="{ '--delay': isFirstRender ? index : 0 }"
         :class="{ open: openBillId === bill.id }"
         @touchstart="handleTouchStart($event, bill.id)"
         @touchmove="handleTouchMove($event, bill.id)"
@@ -67,6 +67,32 @@ const emit = defineEmits<{ (e: "edit", bill: Bill): void }>();
 
 const { categories, removeBill } = useBills();
 const openBillId = ref<number | null>(null);
+const isFirstRender = ref(true);
+
+// 延迟关闭首次渲染标记，确保初次进入有动画，后续排序没延迟
+setTimeout(() => {
+  isFirstRender.value = false;
+}, 800);
+
+// 预计算分类图标映射，避免在 v-for 中重复搜索
+const categoryMap = computed(() => {
+  const map: Record<string, string> = {};
+  [...categories.value.expense, ...categories.value.income].forEach((cat) => {
+    map[cat.name] = cat.icon;
+  });
+  return map;
+});
+
+const sortedBills = computed(() => {
+  const list = [...props.bills];
+  if (props.sortMode === "amount") {
+    return list.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount) || String(b.date).localeCompare(String(a.date)));
+  }
+  return list.sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id - a.id);
+});
+
+const getIcon = (name: string) => categoryMap.value[name] || "📒";
+
 const touchState = ref({
   id: null as number | null,
   startX: 0,
@@ -77,19 +103,6 @@ const touchState = ref({
 });
 const revealWidth = 168;
 const swipeThreshold = 48;
-
-const sortedBills = computed(() => {
-  const list = [...props.bills];
-  if (props.sortMode === "amount") {
-    return list.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount) || String(b.date).localeCompare(String(a.date)));
-  }
-  return list.sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.id - a.id);
-});
-
-const getIcon = (name: string) => {
-  const all = [...categories.value.expense, ...categories.value.income];
-  return all.find((cat) => cat.name === name)?.icon || "📒";
-};
 
 const resetTouch = () => {
   touchState.value = { id: null, startX: 0, startY: 0, offsetX: 0, swiping: false, locked: false };

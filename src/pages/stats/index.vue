@@ -52,8 +52,14 @@ const periodTitle = computed(() => {
     return `${selectedDate.value.getFullYear()}年`;
   }
   if (periodMode.value === "week") {
-    const range = getWeekRange(selectedDate.value);
-    return `${range.startLabel} - ${range.endLabel}`;
+    const cur = selectedDate.value;
+    const dayOfWeek = cur.getDay() === 0 ? 6 : cur.getDay() - 1;
+    const start = new Date(cur);
+    start.setDate(cur.getDate() - dayOfWeek);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const fmt = (d: Date) => `${d.getMonth() + 1}/${d.getDate()}`;
+    return `${fmt(start)} - ${fmt(end)}`;
   }
   return formatMonthLabel(selectedMonth.value);
 });
@@ -65,10 +71,18 @@ const currentPeriodBills = computed(() => {
   }
 
   if (periodMode.value === "week") {
-    const range = getWeekRange(selectedDate.value);
+    const cur = selectedDate.value;
+    const dayOfWeek = cur.getDay() === 0 ? 6 : cur.getDay() - 1;
+    const start = new Date(cur);
+    start.setDate(cur.getDate() - dayOfWeek);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const startKey = `${start.getFullYear()}-${pad(start.getMonth()+1)}-${pad(start.getDate())}`;
+    const endKey = `${end.getFullYear()}-${pad(end.getMonth()+1)}-${pad(end.getDate())}`;
     return bills.value.filter((bill) => {
       const dateKey = normalizeDateKey(String(bill.date));
-      return dateKey >= range.startKey && dateKey <= range.endKey;
+      return dateKey >= startKey && dateKey <= endKey;
     });
   }
 
@@ -92,6 +106,55 @@ const totalIncome = computed(() =>
 );
 
 const categoryPalette = ["#FFC978", "#A29BFE", "#FF8A8A", "#8EC9FF", "#C8B6E8"];
+
+// ── 环比计算 ──
+const prevPeriodExpense = computed(() => {
+  if (periodMode.value === "week") {
+    // 上一周：当前周起始日往前推 7 天
+    const cur = selectedDate.value;
+    const dayOfWeek = cur.getDay() === 0 ? 6 : cur.getDay() - 1;
+    const curStart = new Date(cur);
+    curStart.setDate(cur.getDate() - dayOfWeek);
+    const prevStart = new Date(curStart);
+    prevStart.setDate(curStart.getDate() - 7);
+    const prevEnd = new Date(curStart);
+    prevEnd.setDate(curStart.getDate() - 1);
+    const ps = `${prevStart.getFullYear()}-${String(prevStart.getMonth()+1).padStart(2,"0")}-${String(prevStart.getDate()).padStart(2,"0")}`;
+    const pe = `${prevEnd.getFullYear()}-${String(prevEnd.getMonth()+1).padStart(2,"0")}-${String(prevEnd.getDate()).padStart(2,"0")}`;
+    return bills.value
+      .filter((b) => b.type === "expense" && normalizeDateKey(String(b.date)) >= ps && normalizeDateKey(String(b.date)) <= pe)
+      .reduce((s, b) => s + b.amount, 0);
+  }
+  if (periodMode.value === "month") {
+    const [y, m] = selectedMonth.value.split("-").map(Number);
+    const prev = new Date(y, m - 2, 1);
+    const prevKey = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, "0")}`;
+    return bills.value
+      .filter((b) => b.type === "expense" && getMonthKeyFromDate(String(b.date)) === prevKey)
+      .reduce((s, b) => s + b.amount, 0);
+  }
+  if (periodMode.value === "year") {
+    const prevYear = String(selectedDate.value.getFullYear() - 1);
+    return bills.value
+      .filter((b) => b.type === "expense" && String(b.date).startsWith(prevYear))
+      .reduce((s, b) => s + b.amount, 0);
+  }
+  return 0;
+});
+
+const expenseChangeTag = computed(() => {
+  const cur = totalExpense.value;
+  const prev = prevPeriodExpense.value;
+  if (prev <= 0 || cur <= 0) return null;
+  const pct = ((cur - prev) / prev) * 100;
+  const abs = Math.abs(pct);
+  if (abs < 0.5) return { text: "与上期持平", up: null };
+  const label = periodMode.value === "month" ? "上月" : periodMode.value === "year" ? "去年" : "上周";
+  return {
+    text: pct > 0 ? `比${label} ↑${abs.toFixed(0)}%` : `比${label} ↓${abs.toFixed(0)}%`,
+    up: pct > 0,
+  };
+});
 
 const categoryStats = computed(() => {
   if (totalExpense.value <= 0) return [];
@@ -421,47 +484,49 @@ function sumBills(items: typeof bills.value, type: "expense" | "income") {
       </view>
 
       <view class="hero-card">
-        <view class="hero-content">
+        <!-- 顶部日期导航 Header -->
+        <view class="hero-date-bar">
+          <view class="period-nav" @click.stop="shiftPeriod(-1)">
+            <text class="period-nav-arrow">←</text>
+          </view>
+          <text class="hero-date-title">{{ periodTitle }}</text>
+          <view class="period-nav" @click.stop="shiftPeriod(1)">
+            <text class="period-nav-arrow">→</text>
+          </view>
+        </view>
+
+        <!-- Body：核心金额 + 折线图并排 -->
+        <view class="hero-body">
+          <!-- 左：支出主数字 -->
           <view class="hero-copy">
-            <view class="hero-head">
-              <view class="period-nav" @click.stop="shiftPeriod(-1)">
-                <text class="period-nav-arrow">←</text>
-              </view>
-              <text class="hero-title">{{ periodTitle }}</text>
-              <view class="period-nav" @click.stop="shiftPeriod(1)">
-                <text class="period-nav-arrow">→</text>
-              </view>
-            </view>
-            <view class="hero-metric">
+            <view class="hero-expense-block">
               <text class="metric-label">总支出</text>
-              <text class="metric-value expense"
-                >¥{{ totalExpense.toFixed(2) }}</text
-              >
+              <text class="metric-value-xl expense">¥{{ totalExpense.toFixed(2) }}</text>
+              <view v-if="expenseChangeTag" :class="['change-tag', expenseChangeTag.up ? 'change-up' : 'change-down']">
+                <text class="change-text">{{ expenseChangeTag.text }}</text>
+              </view>
             </view>
-            <view class="hero-metric">
+            <view class="hero-income-row">
               <text class="metric-label">总收入</text>
-              <text class="metric-value income"
-                >¥{{ totalIncome.toFixed(2) }}</text
-              >
+              <text class="metric-value-md income">¥{{ totalIncome.toFixed(2) }}</text>
             </view>
           </view>
 
-          <view class="hero-chart">
-            <view class="sparkline-surface"></view>
-            <view
-              v-for="node in sparklineNodes"
-              :key="node.id"
-              class="spark-node"
-              :style="{ left: `${node.left}%`, top: `${node.top}%` }"
-            >
-              <view
-                v-if="node.segment"
-                class="spark-segment"
-                :style="{
-                  width: `${node.segment.width}%`,
-                  transform: `rotate(${node.segment.angle}deg)`,
-                }"
-              ></view>
+          <!-- 右：图表 + 收入/笔数 -->
+          <view class="hero-right">
+            <!-- 散点图 -->
+            <view class="hero-chart">
+              <view class="spark-wrap">
+                <view
+                  v-for="node in sparklineNodes"
+                  :key="'dot-' + node.id"
+                  class="spark-dot"
+                  :style="{
+                    left: node.left + '%',
+                    top: (node.top / 56 * 100) + '%',
+                  }"
+                ></view>
+              </view>
             </view>
           </view>
         </view>
@@ -861,31 +926,205 @@ page {
 }
 
 .hero-card {
-  padding: 28rpx;
+  padding: 24rpx 28rpx 28rpx;
   margin-bottom: 20rpx;
-  /* background: linear-gradient(
-    135deg,
-    var(--theme-accent-ambient) 0%,
-    var(--theme-primary-soft) 100%
-  ); */
 }
 
-.hero-content {
+/* 日期导航 Header */
+.hero-date-bar {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.hero-date-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--theme-text-muted);
+  letter-spacing: 1rpx;
+  flex: 1;
+  text-align: center;
+}
+
+/* Body */
+.hero-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 16rpx;
 }
 
 .hero-copy {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  min-width: 0;
 }
 
-.hero-head {
+.hero-expense-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.hero-income-block {
+  display: flex;
+  align-items: baseline;
+  gap: 10rpx;
+}
+
+.metric-value-xl {
+  font-size: 68rpx;
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -1rpx;
+}
+
+.metric-value-md {
+  font-size: 36rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.metric-value-md.income {
+  color: var(--theme-income);
+}
+
+.hero-income-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8rpx;
+  margin-top: 4rpx;
+}
+
+/* 环比标签 */
+.change-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  align-self: flex-start;
+}
+
+.change-up {
+  background: rgba(255, 77, 79, 0.1);
+}
+
+.change-down {
+  background: rgba(65, 184, 131, 0.12);
+}
+
+.change-text {
+  font-size: 22rpx;
+  font-weight: 600;
+}
+
+.change-up .change-text {
+  color: #FF4D4F;
+}
+
+.change-down .change-text {
+  color: #41B883;
+}
+
+/* Area 折线图 */
+.hero-chart {
+  width: 100%;
+  height: 100rpx;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.spark-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 12rpx;
+  overflow: visible;
+  padding: 6rpx;
+  box-sizing: border-box;
+}
+
+.spark-dot {
+  position: absolute;
+  width: 18rpx;
+  height: 18rpx;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  margin-left: -9rpx;
+  margin-top: -9rpx;
+  box-shadow: 0 0 0 6rpx var(--theme-primary-soft);
+  animation: spark-breathe 2.4s ease-in-out infinite;
+}
+
+.spark-dot:nth-child(2n) {
+  animation-delay: 0.4s;
+}
+
+.spark-dot:nth-child(3n) {
+  animation-delay: 0.8s;
+}
+
+@keyframes spark-breathe {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6rpx var(--theme-primary-soft);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.45);
+    box-shadow: 0 0 0 10rpx var(--theme-primary-soft);
+    opacity: 0.75;
+  }
+}
+
+/* 右侧容器：图表 + 小数据 */
+.hero-right {
+  width: 240rpx;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+/* 收入 + 笔数 */
+.hero-sub-stats {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18rpx;
-  width: 360rpx;
+  background: rgba(248, 249, 252, 0.7);
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.hero-sub-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10rpx 0;
+  gap: 4rpx;
+}
+
+.hero-sub-divider {
+  width: 1rpx;
+  height: 40rpx;
+  background: rgba(200, 205, 215, 0.5);
+}
+
+.sub-label {
+  font-size: 20rpx;
+  color: #9ca3af;
+}
+
+.sub-value {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+
+.sub-value.income {
+  color: var(--theme-income);
 }
 
 .period-nav {
@@ -915,25 +1154,18 @@ page {
 .hero-title {
   flex: 1;
   text-align: center;
-  font-size: 34rpx;
-  font-weight: 800;
-  color: var(--theme-text);
-}
-
-.hero-metric {
-  display: flex;
-  align-items: baseline;
-  gap: 12rpx;
-  margin-top: 10rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--theme-text-muted);
 }
 
 .metric-label {
-  font-size: 26rpx;
+  font-size: 24rpx;
   color: #6d7280;
 }
 
 .metric-value {
-  font-size: 38rpx;
+  font-size: 34rpx;
   font-weight: 800;
 }
 
@@ -945,48 +1177,15 @@ page {
   color: var(--theme-income);
 }
 
+.metric-value-xl.expense {
+  color: var(--theme-expense);
+}
+
 .hero-chart {
   position: relative;
   width: 220rpx;
   height: 160rpx;
   padding: 16rpx 8rpx;
-}
-
-.sparkline-surface {
-  position: absolute;
-  inset: 18rpx 10rpx;
-  border-radius: 28rpx;
-  /* background: linear-gradient(
-    180deg,
-    var(--theme-accent-ambient) 0%,
-    rgba(0, 0, 0, 0.01) 100%
-  ); */
-}
-
-.spark-node {
-  position: absolute;
-  width: 16rpx;
-  height: 16rpx;
-  margin-left: -8rpx;
-  margin-top: -8rpx;
-  border-radius: 50%;
-  background: var(--theme-primary);
-  box-shadow: 0 0 0 8rpx var(--theme-accent-ambient);
-}
-
-.spark-segment {
-  position: absolute;
-  left: 8rpx;
-  top: 50%;
-  height: 6rpx;
-  margin-top: -3rpx;
-  transform-origin: left center;
-  border-radius: 999rpx;
-  background: linear-gradient(
-    90deg,
-    var(--theme-primary) 0%,
-    var(--theme-accent-ambient) 100%
-  );
 }
 
 .panel-card {

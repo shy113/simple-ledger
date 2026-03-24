@@ -1,4 +1,4 @@
-﻿{
+{
   "pages": [
     {
       "path": "pages/index/index",
@@ -33,15 +33,15 @@
     "list": [
       {
         "pagePath": "pages/index/index",
-        "text": "🧾 明细"
+        "text": "✦ 明细"
       },
       {
         "pagePath": "pages/stats/index",
-        "text": "📊 统计"
+        "text": "◈ 统计"
       },
       {
         "pagePath": "pages/profile/index",
-        "text": "🙂 我的"
+        "text": "◉ 我的"
       }
     ]
   },

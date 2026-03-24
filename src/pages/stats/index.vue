@@ -891,7 +891,9 @@ page {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5rpx solid rgba(200, 205, 215, 0.6);
+  box-shadow: 0 4rpx 12rpx rgba(110, 123, 144, 0.12);
   color: var(--theme-primary-strong);
   font-size: 36rpx;
   /* 增大触摸响应区域 */

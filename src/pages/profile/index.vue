@@ -51,6 +51,29 @@ const handleExport = () => {
   });
 };
 
+// 预校验备份数据格式，返回错误信息或 null（通过）
+const validateBackupJson = (raw: string): string | null => {
+  let payload: any;
+  try {
+    payload = JSON.parse(raw.replace(/^\uFEFF/, ""));
+  } catch {
+    return "不是合法的 JSON 格式";
+  }
+  if (typeof payload !== "object" || payload === null) {
+    return "数据结构不正确";
+  }
+  if (payload.version !== 1) {
+    return "版本号不匹配（需要 version: 1）";
+  }
+  if (!Array.isArray(payload.bills)) {
+    return "缺少 bills 账单数组";
+  }
+  if (typeof payload.categories !== "object" || payload.categories === null) {
+    return "缺少 categories 分类数据";
+  }
+  return null;
+};
+
 const handleImport = () => {
   uni.showModal({
     title: "从剪贴板恢复",
@@ -61,11 +84,31 @@ const handleImport = () => {
       if (!res.confirm) return;
       uni.getClipboardData({
         success: (clip) => {
-          if (!clip.data) {
-            uni.showToast({ title: "剪贴板为空", icon: "none" });
+          if (!clip.data || !clip.data.trim()) {
+            uni.showModal({
+              title: "剪贴板为空",
+              content: "未检测到备份数据，请先导出备份后复制，再执行导入。",
+              showCancel: false,
+              confirmText: "知道了",
+            });
             return;
           }
+          const err = validateBackupJson(clip.data);
+          if (err) {
+            uni.showModal({
+              title: "格式不符，导入取消",
+              content: `数据校验失败：${err}。\n\n当前数据未做任何修改，请检查剪贴板内容后重试。`,
+              showCancel: false,
+              confirmText: "知道了",
+            });
+            return;
+          }
+          // 格式通过，执行恢复
           restoreBackupData(clip.data);
+          // 延迟显示成功提示（等 restoreBackupData 内部 setTimeout 完成）
+          setTimeout(() => {
+            uni.showToast({ title: "导入成功 ✓", icon: "success", duration: 2000 });
+          }, 600);
         },
       });
     },

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useBills } from "../../composables/useBills";
 import { useTheme } from "../../composables/useTheme";
+import { useLoading } from "../../composables/useLoading";
 import type { Bill } from "../../types";
 import {
   formatMonthLabel,
@@ -15,8 +16,10 @@ import StatsView from "../../views/Home/StatsView.vue";
 import AddBillModal from "../../views/Home/AddBillModal.vue";
 import ManagementModals from "../../views/Home/ManagementModals.vue";
 import GlobalLoading from "../../components/GlobalLoading.vue";
+import BillSkeleton from "../../components/BillSkeleton.vue";
 
 const { bills, initData, exportBackupData, restoreBackupData } = useBills();
+const { isSkeleton } = useLoading();
 const { themeVars, currentThemeId, themeOptions, setTheme } = useTheme();
 
 const toggleTheme = () => {
@@ -33,6 +36,8 @@ const toggleTheme = () => {
 
 const selectedMonth = ref(getCurrentMonthKey());
 const sortMode = ref<"date" | "amount">("date");
+// 月份切换方向：left = 向后（下一月），right = 向前（上一月）
+const slideDirection = ref<"left" | "right">("left");
 
 const showAddModal = ref(false);
 const showBackupModal = ref(false);
@@ -75,8 +80,9 @@ const displayedBills = computed(() => {
   return monthBills.value;
 });
 
+// viewKey 同时携带方向，确保每次切换 key 不同以触发动画
 const viewKey = computed(() => {
-  return `list-${selectedMonth.value}`;
+  return `list-${selectedMonth.value}-${slideDirection.value}`;
 });
 
 const handleAddNew = () => {
@@ -99,7 +105,10 @@ const handleSummaryClick = () => {
 };
 const handleMonthChange = (event: any) => {
   const value = event?.detail?.value || "";
-  if (value) selectedMonth.value = String(value).slice(0, 7);
+  if (!value) return;
+  const next = String(value).slice(0, 7);
+  slideDirection.value = next > selectedMonth.value ? "left" : "right";
+  selectedMonth.value = next;
 };
 
 const shiftMonth = (offset: number) => {
@@ -110,10 +119,12 @@ const shiftMonth = (offset: number) => {
 };
 
 const handlePrevMonth = () => {
+  slideDirection.value = "right";
   shiftMonth(-1);
 };
 
 const handleNextMonth = () => {
+  slideDirection.value = "left";
   shiftMonth(1);
 };
 
@@ -205,7 +216,7 @@ const handleImportFile = () => {
         </view>
       </view>
 
-      <!-- 排序工具栏：压在列表上方的药丸 -->
+      <!-- 排序工具栏 -->
       <view class="list-toolbar-fixed">
         <view class="toolbar-labels">
           <text class="toolbar-title">排序方式</text>
@@ -235,7 +246,15 @@ const handleImportFile = () => {
     </view>
 
     <scroll-view class="scroll-content" scroll-y>
-      <view :key="viewKey" class="view-content-wrap fade-in">
+      <!-- 骨架屏：首次数据加载中 -->
+      <BillSkeleton v-if="isSkeleton" :count="5" />
+      <!-- 账单列表：数据就绪后带方向动画切入 -->
+      <view
+        v-else
+        :key="viewKey"
+        class="view-content-wrap"
+        :class="slideDirection === 'left' ? 'slide-in-left' : 'slide-in-right'"
+      >
         <BillList
           :bills="displayedBills"
           :sort-mode="sortMode"
@@ -244,7 +263,7 @@ const handleImportFile = () => {
         />
       </view>
     </scroll-view>
-    <!-- TODO:统计页面后续开发 -->
+
     <view v-if="false" class="stats-fab clickable" @click="goToStats">📊</view>
     <view class="add-fab clickable" @click="handleAddNew">+</view>
 
@@ -309,6 +328,7 @@ const handleImportFile = () => {
       :type="activeType"
     />
 
+    <!-- 保留给页面跳转等全屏 loading 场景 -->
     <GlobalLoading />
   </view>
 </template>
@@ -433,7 +453,7 @@ page {
   text-align: center;
   padding: 10rpx 16rpx;
   border-radius: 999rpx;
-  font-size: 22rpx;
+    font-size: 22rpx;
   color: var(--theme-text-muted);
 }
 .sort-pill.active {
@@ -450,7 +470,6 @@ page {
 }
 .bill-list {
   flex: 1;
-  background-color: #fff;
 }
 .view-content-wrap {
   padding: 0 32rpx;
@@ -459,34 +478,30 @@ page {
   flex-direction: column;
 }
 
-/* 容器入场动画：兼容性优化 */
-.fade-in {
-  -webkit-animation: fadeInAnim 0.4s ease-out both;
-  animation: fadeInAnim 0.4s ease-out both;
+/* 月份切换方向动画 */
+.slide-in-left {
+  -webkit-animation: slideInFromRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: slideInFromRight 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
-
-@-webkit-keyframes fadeInAnim {
-  from {
-    opacity: 0;
-    -webkit-transform: translateY(16rpx);
-    transform: translateY(16rpx);
-  }
-  to {
-    opacity: 1;
-    -webkit-transform: translateY(0);
-    transform: translateY(0);
-  }
+.slide-in-right {
+  -webkit-animation: slideInFromLeft 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  animation: slideInFromLeft 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
-
-@keyframes fadeInAnim {
-  from {
-    opacity: 0;
-    transform: translateY(16rpx);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@-webkit-keyframes slideInFromRight {
+  from { opacity: 0; -webkit-transform: translateX(36rpx); transform: translateX(36rpx); }
+  to   { opacity: 1; -webkit-transform: translateX(0); transform: translateX(0); }
+}
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(36rpx); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@-webkit-keyframes slideInFromLeft {
+  from { opacity: 0; -webkit-transform: translateX(-36rpx); transform: translateX(-36rpx); }
+  to   { opacity: 1; -webkit-transform: translateX(0); transform: translateX(0); }
+}
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-36rpx); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
 .add-fab {
@@ -530,11 +545,7 @@ page {
 }
 .backup-sheet {
   width: 100%;
-  background: linear-gradient(
-    180deg,
-    var(--theme-surface-strong) 0%,
-    var(--theme-page-bg) 100%
-  );
+  background: linear-gradient(180deg, var(--theme-surface-strong) 0%, var(--theme-page-bg) 100%);
   border-radius: 42rpx 42rpx 0 0;
   padding: 34rpx 34rpx 40rpx;
 }
@@ -544,52 +555,13 @@ page {
   align-items: center;
   margin-bottom: 18rpx;
 }
-.backup-title {
-  font-size: 38rpx;
-  font-weight: 700;
-}
-.backup-close {
-  font-size: 40rpx;
-  color: var(--theme-text-muted);
-  padding: 8rpx 12rpx;
-}
-.backup-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18rpx;
-}
-.backup-card {
-  padding: 24rpx 22rpx;
-  border-radius: 28rpx;
-  border: 1rpx solid rgba(215, 232, 221, 0.95);
-  background: var(--theme-surface-strong);
-}
-.backup-card-title {
-  display: block;
-  font-size: 30rpx;
-  font-weight: 700;
-  margin-bottom: 8rpx;
-}
-.backup-card-subtitle {
-  font-size: 22rpx;
-  color: var(--theme-text-muted);
-}
-.backup-import-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 14rpx;
-}
-.backup-import-row {
-  padding: 24rpx 22rpx;
-  border-radius: 24rpx;
-  border: 1rpx solid rgba(215, 232, 221, 0.95);
-  background: var(--theme-surface-strong);
-  font-weight: 700;
-}
-.backup-back {
-  margin-top: 10rpx;
-  text-align: center;
-  color: var(--theme-primary);
-  font-size: 24rpx;
-}
+.backup-title { font-size: 38rpx; font-weight: 700; }
+.backup-close { font-size: 40rpx; color: var(--theme-text-muted); padding: 8rpx 12rpx; }
+.backup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18rpx; }
+.backup-card { padding: 24rpx 22rpx; border-radius: 28rpx; border: 1rpx solid rgba(215,232,221,0.95); background: var(--theme-surface-strong); }
+.backup-card-title { display: block; font-size: 30rpx; font-weight: 700; margin-bottom: 8rpx; }
+.backup-card-subtitle { font-size: 22rpx; color: var(--theme-text-muted); }
+.backup-import-panel { display: flex; flex-direction: column; gap: 14rpx; }
+.backup-import-row { padding: 24rpx 22rpx; border-radius: 24rpx; border: 1rpx solid rgba(215,232,221,0.95); background: var(--theme-surface-strong); font-weight: 700; }
+.backup-back { margin-top: 10rpx; text-align: center; color: var(--theme-primary); font-size: 24rpx; }
 </style>

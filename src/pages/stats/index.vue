@@ -347,9 +347,9 @@ function sumBills(items: typeof bills.value, type: "expense" | "income") {
           <view class="hero-content">
             <view class="hero-copy">
               <view class="hero-head">
-                <view class="period-nav" @click="shiftPeriod(-1)">‹</view>
+                <view class="period-nav" @click.stop="shiftPeriod(-1)">‹</view>
                 <text class="hero-title">{{ periodTitle }}</text>
-                <view class="period-nav" @click="shiftPeriod(1)">›</view>
+                <view class="period-nav" @click.stop="shiftPeriod(1)">›</view>
               </view>
               <view class="hero-metric">
                 <text class="metric-label">总支出</text>
@@ -385,35 +385,42 @@ function sumBills(items: typeof bills.value, type: "expense" | "income") {
         <block v-if="hasAnyData">
           <view class="panel-card">
             <view class="panel-title">分类支出占比</view>
-            <view class="donut-section">
-            <view class="donut-wrap">
-              <view class="donut-stage">
-                <view class="donut-chart-shell">
-                  <view class="donut-chart" :style="donutStyle"></view>
-                  <view class="donut-hole"></view>
-                  <view class="donut-center-text">
-                    <text class="donut-center-label">总支出</text>
-                    <text class="donut-center-amount">¥{{ totalExpense.toFixed(2) }}</text>
-                  </view>
-                </view>
+
+            <!-- 环图居中 -->
+            <view class="donut-center-block">
+              <view class="donut-chart-shell">
+                <view class="donut-chart" :style="donutStyle"></view>
+                <view class="donut-hole"></view>
+                <view class="donut-center-text">
+                  <text class="donut-center-label">总支出</text>
+                  <text class="donut-center-amount">¥{{ totalExpense.toFixed(0) }}</text>
                 </view>
               </view>
+            </view>
 
-              <view class="donut-legend">
-                <view
-                  v-for="item in categoryStats"
-                  :key="item.name"
-                  class="legend-item"
-                  @click="openCategoryDetail(item.name)"
-                >
+            <!-- 图例列表 -->
+            <view class="donut-legend">
+              <view
+                v-for="item in categoryStats"
+                :key="item.name"
+                class="legend-item"
+                @click="openCategoryDetail(item.name)"
+              >
+                <view class="legend-left">
+                  <view class="legend-color-bar" :style="{ background: item.color }"></view>
                   <view class="legend-info">
-                    <view class="legend-dot" :style="{ background: item.color }"></view>
                     <text class="legend-name">{{ item.icon }} {{ item.name }}</text>
+                    <view class="legend-bar-track">
+                      <view
+                        class="legend-bar-fill"
+                        :style="{ width: item.percent + '%', background: item.color }"
+                      ></view>
+                    </view>
                   </view>
-                  <view class="legend-right">
-                    <text class="legend-amount">¥{{ item.amount.toFixed(0) }}</text>
-                    <text class="legend-value">{{ item.percent.toFixed(0) }}%</text>
-                  </view>
+                </view>
+                <view class="legend-right">
+                  <text class="legend-amount">¥{{ item.amount.toFixed(0) }}</text>
+                  <text class="legend-percent">{{ item.percent.toFixed(0) }}%</text>
                 </view>
               </view>
             </view>
@@ -546,15 +553,17 @@ page {
 }
 
 .period-nav {
-  width: 44rpx;
-  height: 44rpx;
+  width: 72rpx;
+  height: 72rpx;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.62);
   color: var(--theme-primary-strong);
-  font-size: 30rpx;
+  font-size: 36rpx;
+  /* 增大触摸响应区域 */
+  margin: -14rpx -4rpx;
 }
 
 .hero-title {
@@ -650,56 +659,38 @@ page {
   margin-bottom: 0;
 }
 
-.donut-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.donut-wrap {
-  width: 100%;
-  padding: 12rpx 0 28rpx;
+/* ── 环图居中区块 ── */
+.donut-center-block {
   display: flex;
   justify-content: center;
-  overflow: visible;
-}
-
-.donut-stage {
-  position: relative;
-  width: 100%;
-  max-width: 520rpx;
-  height: 340rpx;
-  display: flex;
   align-items: center;
-  justify-content: center;
-  overflow: visible;
+  padding: 24rpx 0 32rpx;
 }
 
 .donut-chart-shell {
   position: relative;
-  width: 340rpx;
-  height: 340rpx;
+  width: 300rpx;
+  height: 300rpx;
 }
 
 .donut-chart {
   position: relative;
-  width: 340rpx;
-  height: 340rpx;
+  width: 300rpx;
+  height: 300rpx;
   border-radius: 50%;
-  box-shadow: 0 12rpx 24rpx rgba(104, 118, 146, 0.06);
+  box-shadow: 0 8rpx 28rpx rgba(104, 118, 146, 0.10);
 }
 
 .donut-hole {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 224rpx;
-  height: 224rpx;
+  width: 196rpx;
+  height: 196rpx;
   border-radius: 50%;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.99) 0%, rgba(249, 250, 252, 0.96) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(249,250,252,0.96) 100%);
   transform: translate(-50%, -50%);
-  box-shadow: inset 0 0 0 2rpx rgba(239, 241, 245, 0.9);
+  box-shadow: inset 0 0 0 2rpx rgba(239,241,245,0.9);
 }
 
 .donut-center-text {
@@ -717,20 +708,25 @@ page {
 .donut-center-label {
   font-size: 20rpx;
   color: #9aa0ab;
+  margin-bottom: 4rpx;
 }
 
 .donut-center-amount {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 800;
   letter-spacing: -0.3rpx;
   color: #20232d;
 }
 
+/* ── 图例列表 ── */
 .donut-legend {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 14rpx;
+  gap: 0;
+  border-radius: 20rpx;
+  overflow: hidden;
+  background: rgba(249, 250, 252, 0.6);
 }
 
 .legend-item {
@@ -738,48 +734,78 @@ page {
   justify-content: space-between;
   align-items: center;
   gap: 16rpx;
-  padding: 18rpx 20rpx;
-  border-radius: 24rpx;
-  background: linear-gradient(180deg, rgba(249, 250, 252, 0.96) 0%, rgba(255, 255, 255, 0.9) 100%);
-  box-shadow: inset 0 1rpx 0 rgba(255, 255, 255, 0.9);
+  padding: 20rpx 20rpx;
+  border-bottom: 1rpx solid rgba(230, 232, 238, 0.5);
+}
+
+.legend-item:last-child {
+  border-bottom: none;
+}
+
+.legend-left {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.legend-color-bar {
+  width: 6rpx;
+  height: 36rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
 }
 
 .legend-info {
   display: flex;
-  align-items: center;
-  gap: 12rpx;
+  flex-direction: column;
+  gap: 6rpx;
+  flex: 1;
   min-width: 0;
 }
 
-.legend-dot {
-  width: 14rpx;
-  height: 14rpx;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
 .legend-name {
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
   color: var(--theme-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.legend-value {
-  min-width: 64rpx;
-  font-size: 28rpx;
-  text-align: right;
-  color: #778092;
+.legend-bar-track {
+  height: 6rpx;
+  border-radius: 999rpx;
+  background: rgba(200, 202, 210, 0.28);
+  overflow: hidden;
+  width: 100%;
+}
+
+.legend-bar-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  max-width: 100%;
+  transition: width 0.4s ease;
 }
 
 .legend-right {
   display: flex;
-  align-items: baseline;
-  gap: 14rpx;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2rpx;
+  flex-shrink: 0;
 }
 
 .legend-amount {
-  font-size: 24rpx;
-  color: #8f98a8;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+
+.legend-percent {
+  font-size: 22rpx;
+  color: #9aa5b4;
 }
 
 .empty-card {

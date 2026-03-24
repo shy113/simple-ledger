@@ -1,4 +1,4 @@
-﻿import { ref, computed } from 'vue';
+import { ref, computed } from 'vue';
 import { getTodayDateString } from '../utils/dateHelper';
 import { useLoading } from './useLoading';
 import type { Bill, Category, Person } from '../types';
@@ -78,7 +78,7 @@ const sanitizePersonList = (items: any): Person[] => {
 };
 
 export function useBills() {
-  const { showLoading, hideLoading } = useLoading();
+  const { showSkeleton, hideSkeleton, showLoading, hideLoading } = useLoading();
   const totalExpense = computed(() =>
     bills.value
       .filter((bill) => bill.type === 'expense')
@@ -99,7 +99,7 @@ export function useBills() {
   };
 
   const initData = () => {
-    showLoading('载入中...');
+        showSkeleton();
     setTimeout(() => {
       // 账单加载
       const b = uni.getStorageSync('my_bills');
@@ -136,7 +136,7 @@ export function useBills() {
       if (!c || !p) {
         sync();
       }
-      hideLoading();
+      hideSkeleton();
     }, 200);
   };
 

@@ -424,9 +424,13 @@ function sumBills(items: typeof bills.value, type: "expense" | "income") {
         <view class="hero-content">
           <view class="hero-copy">
             <view class="hero-head">
-              <view class="period-nav" @click.stop="shiftPeriod(-1)">‹</view>
+              <view class="period-nav" @click.stop="shiftPeriod(-1)">
+                <text class="period-nav-arrow">←</text>
+              </view>
               <text class="hero-title">{{ periodTitle }}</text>
-              <view class="period-nav" @click.stop="shiftPeriod(1)">›</view>
+              <view class="period-nav" @click.stop="shiftPeriod(1)">
+                <text class="period-nav-arrow">→</text>
+              </view>
             </view>
             <view class="hero-metric">
               <text class="metric-label">总支出</text>
@@ -885,19 +889,27 @@ page {
 }
 
 .period-nav {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 50%;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1.5rpx solid rgba(200, 205, 215, 0.6);
-  box-shadow: 0 4rpx 12rpx rgba(110, 123, 144, 0.12);
+  background: var(--theme-primary-soft);
   color: var(--theme-primary-strong);
-  font-size: 36rpx;
-  /* 增大触摸响应区域 */
   margin: -14rpx -4rpx;
+  transition: opacity 0.15s;
+}
+
+.period-nav:active {
+  opacity: 0.6;
+}
+
+.period-nav-arrow {
+  font-size: 28rpx;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--theme-primary-strong);
 }
 
 .hero-title {

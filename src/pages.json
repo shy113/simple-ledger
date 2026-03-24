@@ -17,8 +17,34 @@
       "style": {
         "navigationBarTitleText": "统计中心"
       }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
     }
   ],
+  "tabBar": {
+    "color": "#97A1B2",
+    "selectedColor": "#41B883",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "🧾 明细"
+      },
+      {
+        "pagePath": "pages/stats/index",
+        "text": "📊 统计"
+      },
+      {
+        "pagePath": "pages/profile/index",
+        "text": "🙂 我的"
+      }
+    ]
+  },
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "蜉蝣简账",

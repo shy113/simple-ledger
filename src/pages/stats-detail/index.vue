@@ -1,38 +1,42 @@
 ﻿<template>
   <view class="page" :style="themeVars">
-    <view class="hero-card">
+    <view :class="['page-content', pageReady ? 'page-ready' : '']">
+      <view class="hero-card">
       <view class="hero-kicker">统计明细</view>
       <view class="hero-title">{{ title }}</view>
       <view class="hero-subtitle">{{ monthText }}</view>
-    </view>
-
-    <view class="summary-card">
-      <view class="summary-item">
-        <text class="summary-label">账单数</text>
-        <text class="summary-value">{{ detailBills.length }}</text>
       </view>
-      <view class="summary-item">
-        <text class="summary-label">总金额</text>
-        <text class="summary-value">¥{{ totalAmount.toFixed(2) }}</text>
-      </view>
-    </view>
 
-    <view class="list-card">
-      <view v-if="detailBills.length === 0" class="empty-state"
-        >没有找到匹配的账单</view
-      >
-      <view v-else class="bill-list">
-        <view v-for="bill in detailBills" :key="bill.id" class="bill-item">
-          <view class="bill-main">
-            <view class="bill-name-row">
-              <text class="bill-name">{{ bill.category }}</text>
-              <text class="bill-person">{{ bill.personName }}</text>
+      <view class="summary-card">
+        <view class="summary-item">
+          <text class="summary-label">账单数</text>
+          <text class="summary-value">{{ detailBills.length }}</text>
+        </view>
+        <view class="summary-item">
+          <text class="summary-label">{{ totalAmountLabel }}</text>
+          <text class="summary-value">¥{{ totalAmount.toFixed(2) }}</text>
+        </view>
+      </view>
+
+      <view class="list-card">
+        <view v-if="detailBills.length === 0" class="empty-state"
+          >没有找到匹配的账单</view
+        >
+        <view v-else class="bill-list">
+          <view v-for="bill in detailBills" :key="bill.id" class="bill-item">
+            <view class="bill-main">
+              <view class="bill-name-row">
+                <text class="bill-name">{{ bill.category }}</text>
+                <text class="bill-person">{{ bill.personName }}</text>
+              </view>
+              <text class="bill-meta"
+                >{{ bill.date }}{{ bill.note ? " · " + bill.note : "" }}</text
+              >
             </view>
-            <text class="bill-meta"
-              >{{ bill.date }}{{ bill.note ? " · " + bill.note : "" }}</text
-            >
+            <text :class="['bill-amount', bill.type]">
+              {{ bill.type === "expense" ? "-" : "+" }}{{ bill.amount.toFixed(2) }}
+            </text>
           </view>
-          <text class="bill-amount">-{{ bill.amount.toFixed(2) }}</text>
         </view>
       </view>
     </view>
@@ -55,58 +59,104 @@ const { bills: allBills } = useBills();
 const { themeVars } = useTheme();
 const { hideLoading } = useLoading();
 
-const kind = ref<"category" | "person">("category");
+const kind = ref<"category" | "person" | "date">("category");
 const name = ref("");
-const monthKey = ref("");
+const period = ref("");
+const mode = ref<"month" | "year" | "week" | "day">("month");
+const pageReady = ref(false);
 
 onLoad((query) => {
   const params = query || {};
-  kind.value = params.kind === "person" ? "person" : "category";
+  kind.value =
+    params.kind === "person"
+      ? "person"
+      : params.kind === "date"
+        ? "date"
+        : "category";
   name.value =
     typeof params.name === "string" ? decodeURIComponent(params.name) : "";
-  monthKey.value =
-    typeof params.month === "string" ? decodeURIComponent(params.month) : "";
+  period.value =
+    typeof params.period === "string"
+      ? decodeURIComponent(params.period)
+      : typeof params.month === "string"
+        ? decodeURIComponent(params.month)
+        : "";
+  mode.value =
+    params.mode === "year" || params.mode === "week" || params.mode === "day"
+      ? params.mode
+      : "month";
 });
 
 onMounted(() => {
-  // 极短延迟，仅用于确保 UI 线程释放
   setTimeout(() => {
     hideLoading();
-  }, 150);
+    setTimeout(() => {
+      pageReady.value = true;
+    }, 30);
+  }, 120);
 });
 
 const detailBills = computed<Bill[]>(() => {
   const matched = allBills.value.filter((bill) => {
-    // 1. 强制只看支出 (明细页通常只看支出详情)
-    if (bill.type !== 'expense') return false;
+    if (kind.value !== "date" && bill.type !== "expense") return false;
 
-    // 2. 时间筛选 (兼容 YYYY-MM 和 YYYY 格式)
     const billDateStr = String(bill.date);
-    if (monthKey.value && !billDateStr.startsWith(monthKey.value)) return false;
+    if (period.value) {
+      if (mode.value === "week" && period.value.includes("|")) {
+        const [start, end] = period.value.split("|");
+        if (billDateStr < start || billDateStr > end) return false;
+      } else if (!billDateStr.startsWith(period.value)) {
+        return false;
+      }
+    }
 
-    // 3. 名称筛选 (如果有 name)
     if (!name.value) return true;
+
+    if (kind.value === "date") {
+      return billDateStr === name.value;
+    }
 
     return kind.value === "person"
       ? bill.personName === name.value
       : bill.category === name.value;
   });
-  return [...matched].sort((a, b) => b.amount - a.amount);
+  return [...matched].sort((a, b) => {
+    if (kind.value === "date") return b.amount - a.amount;
+    return b.amount - a.amount;
+  });
 });
 
 const title = computed(() => {
   if (!name.value) return "支出总览";
+  if (kind.value === "date") return `${name.value} 收支明细`;
   return kind.value === "category"
     ? `${name.value} 分类明细`
     : `${name.value} 成员明细`;
 });
 
 const monthText = computed(() =>
-  monthKey.value ? formatMonthLabel(monthKey.value) : "全部月份",
+  formatPeriodLabel(period.value, mode.value),
 );
 const totalAmount = computed(() =>
   detailBills.value.reduce((sum, bill) => sum + bill.amount, 0),
 );
+
+const totalAmountLabel = computed(() =>
+  kind.value === "date" ? "总收支" : "总金额",
+);
+
+function formatPeriodLabel(
+  raw: string,
+  currentMode: "month" | "year" | "week" | "day",
+) {
+  if (!raw) return "全部周期";
+  if (currentMode === "week" && raw.includes("|")) {
+    const [start, end] = raw.split("|");
+    return `${start} 至 ${end}`;
+  }
+  if (currentMode === "day") return raw;
+  return formatMonthLabel(raw);
+}
 </script>
 
 <style scoped>
@@ -119,6 +169,15 @@ const totalAmount = computed(() =>
   );
   padding: 24rpx;
   box-sizing: border-box;
+}
+.page-content {
+  opacity: 0;
+  transform: translateY(16rpx);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.page-ready {
+  opacity: 1;
+  transform: translateY(0);
 }
 .hero-card,
 .summary-card,
@@ -212,6 +271,12 @@ const totalAmount = computed(() =>
   font-weight: 700;
   color: var(--theme-text);
   margin-left: 20rpx;
+}
+.bill-amount.expense {
+  color: var(--theme-expense);
+}
+.bill-amount.income {
+  color: var(--theme-income);
 }
 .empty-state {
   text-align: center;

@@ -46,7 +46,11 @@ const handleExport = () => {
   uni.setClipboardData({
     data,
     success: () => {
-      uni.showToast({ title: "备份数据已复制到剪贴板", icon: "none", duration: 2500 });
+      uni.showToast({
+        title: "备份数据已复制到剪贴板",
+        icon: "none",
+        duration: 2500,
+      });
     },
   });
 };
@@ -107,7 +111,11 @@ const handleImport = () => {
           restoreBackupData(clip.data);
           // 延迟显示成功提示（等 restoreBackupData 内部 setTimeout 完成）
           setTimeout(() => {
-            uni.showToast({ title: "导入成功 ✓", icon: "success", duration: 2000 });
+            uni.showToast({
+              title: "导入成功 ✓",
+              icon: "success",
+              duration: 2000,
+            });
           }, 600);
         },
       });
@@ -116,15 +124,24 @@ const handleImport = () => {
 };
 
 const menuItems = [
-  { icon: "📤", label: "导出备份", sub: "复制数据到剪贴板", key: "export" },
-  { icon: "📥", label: "从备份恢复", sub: "从剪贴板导入数据", key: "import" },
+  // { icon: "📤", label: "导出备份", sub: "复制数据到剪贴板", key: "export" },
+  // { icon: "📥", label: "从备份恢复", sub: "从剪贴板导入数据", key: "import" },
   { icon: "📋", label: "关于应用", sub: "版本信息与作者", key: "about" },
 ];
 
 const onMenu = (key: string) => {
-  if (key === "export") { handleExport(); return; }
-  if (key === "import") { handleImport(); return; }
-  if (key === "about") { showAbout.value = true; return; }
+  if (key === "export") {
+    handleExport();
+    return;
+  }
+  if (key === "import") {
+    handleImport();
+    return;
+  }
+  if (key === "about") {
+    showAbout.value = true;
+    return;
+  }
 };
 </script>
 
@@ -157,8 +174,11 @@ const onMenu = (key: string) => {
         </view>
         <view class="stat-divider"></view>
         <view class="stat-cell">
-          <text class="stat-val" :class="netBalance >= 0 ? 'income-color' : 'expense-color'">
-            {{ netBalance >= 0 ? '+' : '' }}{{ netBalance.toFixed(0) }}
+          <text
+            class="stat-val"
+            :class="netBalance >= 0 ? 'income-color' : 'expense-color'"
+          >
+            {{ netBalance >= 0 ? "+" : "" }}{{ netBalance.toFixed(0) }}
           </text>
           <text class="stat-label">净结余</text>
         </view>
@@ -172,14 +192,18 @@ const onMenu = (key: string) => {
             <view class="snapshot-icon expense-bg">💸</view>
             <view class="snapshot-info">
               <text class="snapshot-sub">累计支出</text>
-              <text class="snapshot-amount expense-color">¥{{ totalExpense.toFixed(2) }}</text>
+              <text class="snapshot-amount expense-color"
+                >¥{{ totalExpense.toFixed(2) }}</text
+              >
             </view>
           </view>
           <view class="snapshot-item">
             <view class="snapshot-icon income-bg">💰</view>
             <view class="snapshot-info">
               <text class="snapshot-sub">累计收入</text>
-              <text class="snapshot-amount income-color">¥{{ totalIncome.toFixed(2) }}</text>
+              <text class="snapshot-amount income-color"
+                >¥{{ totalIncome.toFixed(2) }}</text
+              >
             </view>
           </view>
         </view>
@@ -194,7 +218,10 @@ const onMenu = (key: string) => {
         <view
           v-for="(item, index) in menuItems"
           :key="item.key"
-          :class="['menu-item', index < menuItems.length - 1 ? 'menu-item-border' : '']"
+          :class="[
+            'menu-item',
+            index < menuItems.length - 1 ? 'menu-item-border' : '',
+          ]"
           @click="onMenu(item.key)"
         >
           <view class="menu-icon-wrap">
@@ -215,49 +242,55 @@ const onMenu = (key: string) => {
       </view>
     </scroll-view>
 
-      <!-- 关于弹窗 -->
-      <view v-if="showAbout" class="modal-mask" @click.self="showAbout = false">
-        <view class="modal-box">
-          <!-- 顶部装饰 -->
-          <view class="modal-hero">
-            <view class="modal-avatar"><text class="modal-avatar-emoji">🌿</text></view>
-            <text class="modal-app-name">蜉蝣简账</text>
-            <text class="modal-app-slogan">轻记录，慢生活</text>
-          </view>
-
-          <!-- 隐私声明 -->
-          <view class="modal-privacy">
-            <text class="privacy-icon">🔒</text>
-            <view class="privacy-text">
-              <text class="privacy-title">数据绝对私密</text>
-              <text class="privacy-desc">所有数据仅存储在本机，不上传任何服务器，无需注册，无任何追踪</text>
-            </view>
-          </view>
-
-          <!-- 介绍文字 -->
-          <text class="modal-body">一款极简风格的个人记账小程序，专注于记录日常收支，只希望帮你保留每一笔生活的痕迹。</text>
-
-          <!-- 作者信息 -->
-          <view class="modal-author">
-            <view class="author-row">
-              <text class="author-key">作者</text>
-              <text class="author-val">guzhaoheng</text>
-            </view>
-            <view class="author-divider"></view>
-            <view class="author-row">
-              <text class="author-key">邮箱</text>
-              <text class="author-val">2369118064@qq.com</text>
-            </view>
-            <view class="author-divider"></view>
-            <view class="author-row">
-              <text class="author-key">版本</text>
-              <text class="author-val">v1.0.0</text>
-            </view>
-          </view>
-
-          <view class="modal-btn" @click="showAbout = false">知道了</view>
+    <!-- 关于弹窗 -->
+    <view v-if="showAbout" class="modal-mask" @click.self="showAbout = false">
+      <view class="modal-box">
+        <!-- 顶部装饰 -->
+        <view class="modal-hero">
+          <view class="modal-avatar"
+            ><text class="modal-avatar-emoji">🌿</text></view
+          >
+          <text class="modal-app-name">蜉蝣简账</text>
+          <text class="modal-app-slogan">轻记录，慢生活</text>
         </view>
+
+        <!-- 隐私声明 -->
+        <view class="modal-privacy">
+          <text class="privacy-icon">🔒</text>
+          <view class="privacy-text">
+            <text class="privacy-title">数据绝对私密</text>
+            <text class="privacy-desc"
+              >所有数据仅存储在本机，不上传任何服务器，无需注册，无任何追踪</text
+            >
+          </view>
+        </view>
+
+        <!-- 介绍文字 -->
+        <text class="modal-body"
+          >一款极简风格的个人记账小程序，专注于记录日常收支，只希望帮你保留每一笔生活的痕迹。</text
+        >
+
+        <!-- 作者信息 -->
+        <view class="modal-author">
+          <view class="author-row">
+            <text class="author-key">作者</text>
+            <text class="author-val">guzhaoheng</text>
+          </view>
+          <view class="author-divider"></view>
+          <view class="author-row">
+            <text class="author-key">邮箱</text>
+            <text class="author-val">2369118064@qq.com</text>
+          </view>
+          <view class="author-divider"></view>
+          <view class="author-row">
+            <text class="author-key">版本</text>
+            <text class="author-val">v1.0.0</text>
+          </view>
+        </view>
+
+        <view class="modal-btn" @click="showAbout = false">知道了</view>
       </view>
+    </view>
   </view>
 </template>
 
@@ -386,8 +419,12 @@ page {
   background: rgba(200, 205, 215, 0.4);
 }
 
-.income-color { color: var(--theme-income); }
-.expense-color { color: var(--theme-expense); }
+.income-color {
+  color: var(--theme-income);
+}
+.expense-color {
+  color: var(--theme-expense);
+}
 
 /* 卡片通用 */
 .snapshot-card,
@@ -438,8 +475,12 @@ page {
   flex-shrink: 0;
 }
 
-.expense-bg { background: var(--theme-expense-soft); }
-.income-bg { background: var(--theme-income-soft); }
+.expense-bg {
+  background: var(--theme-expense-soft);
+}
+.income-bg {
+  background: var(--theme-income-soft);
+}
 
 .snapshot-info {
   display: flex;
@@ -471,7 +512,9 @@ page {
   background: var(--theme-primary-soft);
 }
 
-.tip-emoji { font-size: 28rpx; }
+.tip-emoji {
+  font-size: 28rpx;
+}
 
 .tip-text {
   font-size: 24rpx;
@@ -554,7 +597,9 @@ page {
   flex-shrink: 0;
 }
 
-.menu-icon { font-size: 32rpx; }
+.menu-icon {
+  font-size: 32rpx;
+}
 
 .menu-text {
   flex: 1;
@@ -628,19 +673,23 @@ page {
   flex-direction: column;
   align-items: center;
   padding: 44rpx 40rpx 32rpx;
-  background: linear-gradient(160deg, var(--theme-accent-ambient) 0%, var(--theme-primary-soft) 100%);
+  background: linear-gradient(
+    160deg,
+    var(--theme-accent-ambient) 0%,
+    var(--theme-primary-soft) 100%
+  );
 }
 
 .modal-avatar {
   width: 104rpx;
   height: 104rpx;
   border-radius: 50%;
-  background: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 16rpx;
-  box-shadow: 0 6rpx 20rpx rgba(0,0,0,0.08);
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
 }
 
 .modal-avatar-emoji {

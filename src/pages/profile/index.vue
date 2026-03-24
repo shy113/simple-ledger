@@ -10,7 +10,7 @@ const { themeVars } = useTheme();
     <view class="ambient ambient-b"></view>
 
     <view class="content-card">
-      <text class="title">TODO...</text>
+      <text class="title">TODO</text>
     </view>
   </view>
 </template>

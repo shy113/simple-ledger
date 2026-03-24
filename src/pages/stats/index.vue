@@ -563,7 +563,7 @@ function sumBills(items: typeof bills.value, type: "expense" | "income") {
         </view>
 
         <view class="panel-card">
-          <view class="panel-title">分类支出占比</view>
+          <view class="panel-title">支出占比</view>
 
           <!-- 环图 + 图例 左右并排 -->
           <view class="donut-row">

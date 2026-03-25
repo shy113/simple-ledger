@@ -1,48 +1,34 @@
-﻿# Simple Ledger
+# 蜉蝣简账
 
-一个基于 `uni-app + Vue 3 + TypeScript` 的极简记账应用，主打快速录入、清晰统计和本地优先。
+> 轻记录，慢生活
 
-## 项目简介
+一款基于 `uni-app + Vue 3 + TypeScript` 的极简微信小程序记账工具，专注快速录入、清晰统计与本地隐私优先。
 
-这个项目聚焦“轻量记账”这一个核心场景，尽量减少复杂流程：
+---
 
-- 打开即可查看总收入、总支出和当前结余
-- 支持新增、编辑、删除账单
-- 支持收入 / 支出两种账单类型
-- 支持分类管理和成员管理
-- 提供明细视图与统计视图切换
-- 首次进入会自动注入一批演示数据，方便直接预览效果
+## 特性一览
 
-## 功能特性
+- 📝 **快速记账** — 浮动按钮一键唤起，支持金额、日期、分类、成员、备注录入
+- 📊 **多维统计** — 按周 / 月 / 年切换，折线趋势 + 分类排行 + 成员排行
+- 🏷️ **分类管理** — 自定义支出 / 收入分类，增删编辑图标与名称
+- 👥 **成员管理** — 自定义记账成员，支持头像与姓名编辑
+- 💾 **数据备份** — 一键导出 JSON 到剪贴板，支持从剪贴板恢复
+- 🎨 **多套主题** — 内置多种配色方案，CSS 变量驱动全局切换
+- 🔒 **完全本地** — 所有数据仅存储在本机，零服务器，无追踪，无需注册
 
-### 1. 账单管理
-
-- 浮动按钮快速记一笔
-- 支持金额、日期、分类、成员、备注录入
-- 点击账单可编辑，长按账单可删除
-
-### 2. 数据统计
-
-- 头部卡片展示收入、支出、结余汇总
-- 按分类统计支出占比
-- 按成员统计支出占比
-
-### 3. 本地存储
-
-项目当前不依赖后端，账单数据直接保存在本地 `Storage` 中，主要使用以下 key：
-
-- `my_bills`
-- `my_categories`
-- `my_persons`
-
-这意味着项目开箱即用，适合快速原型、课程作业、uni-app 练手项目或后续继续扩展。
+---
 
 ## 技术栈
 
-- `uni-app`
-- `Vue 3`
-- `TypeScript`
-- `Vite`
+| 层级 | 技术 |
+|------|------|
+| 框架 | uni-app + Vue 3 Composition API |
+| 语言 | TypeScript |
+| 构建 | Vite |
+| 样式 | CSS Variables + rpx |
+| 存储 | uni.setStorageSync / getStorageSync |
+
+---
 
 ## 快速开始
 
@@ -54,30 +40,22 @@ npm install
 
 ### 本地开发
 
-启动 H5：
-
 ```bash
+# 微信小程序
+npm run dev:mp-weixin
+
+# H5
 npm run dev:h5
 ```
 
-启动微信小程序：
+### 构建
 
 ```bash
-npm run dev:mp-weixin
-```
-
-### 构建产物
-
-构建 H5：
-
-```bash
-npm run build:h5
-```
-
-构建微信小程序：
-
-```bash
+# 微信小程序
 npm run build:mp-weixin
+
+# H5
+npm run build:h5
 ```
 
 ### 类型检查
@@ -86,44 +64,105 @@ npm run build:mp-weixin
 npm run type-check
 ```
 
+> 微信小程序需用微信开发者工具导入 `dist/dev/mp-weixin` 目录进行预览。
+
+---
+
 ## 项目结构
 
-```text
-src
-├─ components          # 通用组件
-├─ composables         # 组合式逻辑
-├─ pages               # uni-app 页面入口
-├─ types               # TypeScript 类型定义
-├─ utils               # 工具函数
-└─ views/Home          # 首页相关视图模块
+```
+src/
+├── components/          # 通用组件
+│   ├── BillHeader.vue   # 首页头部汇总卡片
+│   ├── BillSkeleton.vue # 账单骨架屏
+│   └── GlobalLoading.vue
+├── composables/
+│   ├── useBills.ts      # 核心状态：账单、分类、成员的增删改查
+│   ├── useLoading.ts    # 全局加载状态
+│   └── useTheme.ts      # 主题变量注入
+├── pages/
+│   ├── index/           # 首页（明细 + 统计视图入口）
+│   ├── stats/           # 统计中心（周 / 月 / 年趋势）
+│   ├── stats-detail/    # 统计明细（分类 / 成员下钻）
+│   └── profile/         # 我的（分类管理、成员管理、关于）
+├── views/Home/
+│   ├── AddBillModal.vue      # 新增 / 编辑账单弹窗
+│   ├── BackupModal.vue       # 数据备份 / 恢复弹窗
+│   ├── BillList.vue          # 账单列表
+│   ├── ManagementModals.vue  # 分类 / 成员管理弹窗
+│   └── StatsView.vue         # 首页统计视图
+├── types/               # TypeScript 类型定义
+├── utils/
+│   └── dateHelper.ts    # 日期解析与格式化工具
+└── theme/
+    └── index.ts         # 主题配色配置
 ```
 
-核心文件说明：
+---
 
-- `src/composables/useBills.ts`：账单、分类、成员的核心状态与增删改逻辑
-- `src/pages/index/index.vue`：首页入口，负责视图切换和弹窗控制
-- `src/views/Home/AddBillModal.vue`：新增 / 编辑账单弹窗
-- `src/views/Home/BillList.vue`：账单列表
-- `src/views/Home/StatsView.vue`：统计视图
-- `src/views/Home/ManagementModals.vue`：分类 / 成员管理弹窗
+## 本地存储结构
 
-## 当前实现说明
+项目不依赖后端，数据存储在微信小程序本地 Storage：
 
-- 默认内置常用收入、支出分类
-- 默认内置几位常用成员
-- 首次无数据时会自动生成 50 条模拟账单
-- 日期支持简化输入后再格式化处理
+| Key | 内容 |
+|-----|------|
+| `my_bills` | 账单列表 JSON |
+| `my_categories` | 分类配置 JSON |
+| `my_persons` | 成员配置 JSON |
+
+备份格式（导出 JSON）：
+
+```json
+{
+  "version": 1,
+  "exportedAt": "ISO 时间戳",
+  "bills": [...],
+  "categories": { "expense": [...], "income": [...] },
+  "persons": [...]
+}
+```
+
+---
+
+## 功能说明
+
+### 账单录入
+
+- 点击右下角浮动按钮快速新增
+- 支持简化日期输入（如 `3-18`、`0318`、`20260318`）自动识别
+- 新增模式下草稿自动保留，误触关闭不丢失
+
+### 统计中心
+
+- 顶部切换「按周 / 按月 / 按年」三种统计周期
+- Hero 卡片展示总支出 / 总收入 / 环比变化
+- 散点图展示趋势，颜色跟随主题色
+- 分类排行、成员排行下钻至明细
+
+### 分类 / 成员管理
+
+- 在「我的」页面进入管理面板
+- 默认分类 / 成员不可删除，已有账单的自定义项不可删除
+- 编辑时名称和图标（emoji）均可修改，关联账单自动同步
+
+### 数据备份与恢复
+
+- 在「明细」页面右上角操作
+- 导出：将全量数据复制为 JSON 到剪贴板
+- 导入：从剪贴板读取 JSON，校验格式后覆盖恢复
+
+---
 
 ## 后续可扩展方向
 
-- 月度筛选与年度汇总
-- 分类图表可视化
-- 数据导入导出
-- 云端同步 / 账号体系
-- 预算与超支提醒
+- 预算设定与超支提醒
+- 图表可视化增强（饼图、柱状图）
+- 云端同步 / 多设备账号体系
+- 定期账单（房租、订阅等）
+- CSV 导出支持
 
-## 适合谁
+---
 
-- 想快速做一个 uni-app 记账 demo 的同学
-- 想练习 `Vue 3 + TypeScript + composables` 组织方式的开发者
-- 想在这个基础上继续接入后端、数据库或小程序能力的项目维护者
+## License
+
+MIT

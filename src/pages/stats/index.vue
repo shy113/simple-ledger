@@ -263,7 +263,7 @@ const sparklineNodes = computed(() => {
 const hasAnyData = computed(() => currentPeriodBills.value.length > 0);
 
 // ── 趋势图 ──
-type TrendView = "expense" | "income" | "both";
+type TrendView = "expense" | "income";
 const trendView = ref<TrendView>("expense");
 
 const barChartData = computed(() => {
@@ -273,10 +273,8 @@ const barChartData = computed(() => {
   let maxVal = 1;
   if (trendView.value === "expense") {
     maxVal = Math.max(...points.map((p) => p.expense), 1);
-  } else if (trendView.value === "income") {
-    maxVal = Math.max(...points.map((p) => p.income), 1);
   } else {
-    maxVal = Math.max(...points.map((p) => Math.max(p.expense, p.income)), 1);
+    maxVal = Math.max(...points.map((p) => p.income), 1);
   }
 
   const bars = points.map((p) => ({
@@ -314,11 +312,7 @@ const fullMonthBars = computed(() => {
   });
   const maxVal = Math.max(
     ...allDays.map((d) =>
-      trendView.value === "income"
-        ? d.income
-        : trendView.value === "both"
-          ? Math.max(d.expense, d.income)
-          : d.expense,
+      trendView.value === "income" ? d.income : d.expense,
     ),
     1,
   );
@@ -332,6 +326,24 @@ const fullMonthBars = computed(() => {
 const chartBars = computed(() =>
   periodMode.value === "month" ? fullMonthBars.value : barChartData.value.bars,
 );
+
+const trendAxisMax = computed(() =>
+  Math.max(
+    ...chartBars.value.map((bar) =>
+      trendView.value === "income" ? bar.income : bar.expense,
+    ),
+    0,
+  ),
+);
+
+const chartGuideValues = computed(() => {
+  const max = trendAxisMax.value;
+  if (max <= 0) return [] as number[];
+
+  const half = Math.round(max / 2);
+  const top = Math.round(max);
+  return half > 0 && half !== top ? [half, top] : [top];
+});
 
 const setMode = (mode: PeriodMode) => {
   periodMode.value = mode;
@@ -558,14 +570,6 @@ function sumBills(items: typeof bills.value, type: "expense" | "income") {
                 @click="trendView = 'income'"
                 >收入</view
               >
-              <view
-                :class="[
-                  'trend-tab',
-                  trendView === 'both' ? 'trend-tab-active both-active' : '',
-                ]"
-                @click="trendView = 'both'"
-                >对比</view
-              >
             </view>
           </view>
 
@@ -575,59 +579,44 @@ function sumBills(items: typeof bills.value, type: "expense" | "income") {
                 class="bar-chart"
                 :style="{ minWidth: chartBars.length * 28 + 'rpx' }"
               >
+                <view class="bar-guide-layer">
+                  <view
+                    v-for="guide in chartGuideValues"
+                    :key="guide"
+                    class="bar-guide"
+                    :style="{ bottom: (guide / trendAxisMax) * 196 + 34 + 'rpx' }"
+                  >
+                    <view class="bar-guide-line"></view>
+                    <text class="bar-guide-label">{{ guide }}</text>
+                  </view>
+                </view>
                 <view v-for="bar in chartBars" :key="bar.key" class="bar-col">
                   <view class="bar-stacks">
-                    <template v-if="trendView === 'both'">
-                      <view class="bar-pair">
-                        <view
-                          v-if="bar.incomeH > 0"
-                          class="bar-fill bar-income"
-                          :style="{ height: bar.incomeH * 1.68 + 'rpx' }"
-                        ></view>
-                        <view
-                          v-if="bar.expenseH > 0"
-                          class="bar-fill bar-expense"
-                          :style="{ height: bar.expenseH * 1.68 + 'rpx' }"
-                        ></view>
-                      </view>
-                    </template>
-                    <template v-else>
-                      <view
-                        v-if="
+                    <view
+                      v-if="
+                        (trendView === 'income'
+                          ? bar.incomeH
+                          : bar.expenseH) > 0
+                      "
+                      :class="[
+                        'bar-fill',
+                        trendView === 'income' ? 'bar-income' : 'bar-expense',
+                      ]"
+                      :style="{
+                        height:
                           (trendView === 'income'
                             ? bar.incomeH
-                            : bar.expenseH) > 0
-                        "
-                        :class="[
-                          'bar-fill',
-                          trendView === 'income' ? 'bar-income' : 'bar-expense',
-                        ]"
-                        :style="{
-                          height:
-                            (trendView === 'income'
-                              ? bar.incomeH
-                              : bar.expenseH) *
-                              1.68 +
-                            'rpx',
-                        }"
-                      ></view>
-                    </template>
+                            : bar.expenseH) *
+                            1.96 +
+                          'rpx',
+                      }"
+                    ></view>
                   </view>
                   <text class="bar-label">{{ bar.label }}</text>
                 </view>
               </view>
             </scroll-view>
 
-            <view v-if="trendView === 'both'" class="bar-legend">
-              <view class="bar-legend-item">
-                <view class="bar-legend-dot bar-income"></view>
-                <text class="bar-legend-label">收入</text>
-              </view>
-              <view class="bar-legend-item">
-                <view class="bar-legend-dot bar-expense"></view>
-                <text class="bar-legend-label">支出</text>
-              </view>
-            </view>
           </view>
         </view>
 
@@ -802,9 +791,40 @@ page {
   display: flex;
   align-items: flex-end;
   gap: 0;
-  height: 200rpx;
-  padding-bottom: 28rpx;
+  height: 258rpx;
+  padding-bottom: 0;
   box-sizing: border-box;
+  position: relative;
+}
+
+.bar-guide-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bar-guide {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.bar-guide-line {
+  border-top: 1rpx dashed rgba(125, 135, 150, 0.35);
+}
+
+.bar-guide-label {
+  position: absolute;
+  left: 4rpx;
+  transform: translateY(-72%);
+  font-size: 20rpx;
+  font-weight: 600;
+  color: #6f7a8c;
+  background: rgba(255, 255, 255, 0.94);
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+  line-height: 1.2;
 }
 
 .bar-col {
@@ -816,11 +836,13 @@ page {
   min-width: 20rpx;
   height: 100%;
   position: relative;
+  z-index: 1;
 }
 
 .bar-stacks {
   width: 100%;
-  height: 168rpx;
+  height: 196rpx;
+  margin-bottom: 34rpx;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -853,11 +875,11 @@ page {
 
 .bar-label {
   position: absolute;
-  bottom: 0;
+  bottom: 8rpx;
   left: 50%;
   transform: translateX(-50%);
   font-size: 18rpx;
-  color: #b0b8c8;
+  color: #a4adbd;
   white-space: nowrap;
   line-height: 1;
 }
@@ -1383,6 +1405,19 @@ page {
   font-size: 96rpx;
   position: relative;
   z-index: 1;
+  animation: empty-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes empty-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.82;
+  }
 }
 
 .empty-orbit {

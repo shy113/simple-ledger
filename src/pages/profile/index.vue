@@ -358,6 +358,7 @@ page {
   justify-content: center;
   margin-bottom: 20rpx;
   box-shadow: 0 8rpx 28rpx var(--theme-accent-ambient);
+  animation: avatar-breathe 2.8s ease-in-out infinite;
 }
 
 .hero-emoji {
@@ -690,6 +691,7 @@ page {
   justify-content: center;
   margin-bottom: 16rpx;
   box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.08);
+  animation: avatar-breathe 2.8s ease-in-out infinite;
 }
 
 .modal-avatar-emoji {
@@ -708,6 +710,18 @@ page {
   font-size: 24rpx;
   color: var(--theme-text-muted);
   margin-top: 6rpx;
+}
+
+@keyframes avatar-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.86;
+  }
 }
 
 /* 隐私声明 */

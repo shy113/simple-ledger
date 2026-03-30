@@ -2,9 +2,12 @@
 import { computed, ref, onMounted } from "vue";
 import { useTheme } from "../../composables/useTheme";
 import { useBills } from "../../composables/useBills";
+import { useLoading } from "../../composables/useLoading";
+import { getCurrentMonthKey } from "../../utils/dateHelper";
 
 const { themeVars } = useTheme();
 const { bills, initData, exportBackupData, restoreBackupData } = useBills();
+const { showLoading } = useLoading();
 
 const showAbout = ref(false);
 
@@ -30,15 +33,70 @@ const activeDays = computed(() => {
   return days.size;
 });
 
-const topCategory = computed(() => {
-  const map = new Map<string, number>();
-  bills.value
-    .filter((b) => b.type === "expense")
-    .forEach((b) => map.set(b.category, (map.get(b.category) ?? 0) + 1));
-  if (map.size === 0) return null;
-  const [name] = [...map.entries()].sort((a, b) => b[1] - a[1])[0];
-  return name;
+// ── 智慧分析洞察 (基于本月) ──
+const insights = computed(() => {
+  const currentMonth = getCurrentMonthKey();
+  const monthBills = bills.value.filter(b => String(b.date).startsWith(currentMonth) && b.type === "expense");
+  
+  if (monthBills.length === 0) return null;
+
+  const monthTotal = monthBills.reduce((s, b) => s + b.amount, 0);
+  
+  // 1. 日均支出
+  const today = new Date();
+  const daysCount = today.getDate();
+  const dailyAverage = monthTotal / daysCount;
+
+  // 2. 本月最高
+  const maxBill = [...monthBills].sort((a, b) => b.amount - a.amount)[0];
+
+  // 3. 最省钱的一天
+  const dayMap = new Map<string, number>();
+  monthBills.forEach((b) => {
+    const d = String(b.date);
+    dayMap.set(d, (dayMap.get(d) || 0) + b.amount);
+  });
+  const mostSavingDay = [...dayMap.entries()].sort((a, b) => a[1] - b[1])[0];
+
+  return {
+    dailyAverage,
+    maxBill,
+    mostSavingDay: mostSavingDay ? { date: mostSavingDay[0], amount: mostSavingDay[1] } : null
+  };
 });
+
+// ── 人员支出排行 (基于全部数据) ──
+const personStats = computed(() => {
+  const expenseBills = bills.value.filter(b => b.type === "expense");
+  const totalExp = expenseBills.reduce((s, b) => s + b.amount, 0);
+  if (totalExp <= 0) return [];
+
+  const totals = new Map<string, number>();
+  expenseBills.forEach((bill) => {
+    totals.set(bill.personName, (totals.get(bill.personName) || 0) + bill.amount);
+  });
+
+  return [...totals.entries()]
+    .map(([name, amount]) => {
+      const bill = expenseBills.find((b) => b.personName === name);
+      return {
+        name,
+        amount,
+        percent: (amount / totalExp) * 100,
+        avatar: bill?.personAvatar || "👤",
+      };
+    })
+    .sort((a, b) => b.amount - a.amount);
+});
+
+const openPersonDetail = (name: string) => {
+  showLoading("请稍候...");
+  setTimeout(() => {
+    uni.navigateTo({
+      url: `/pages/stats-detail/index?kind=person&name=${encodeURIComponent(name)}&mode=month`,
+    });
+  }, 50);
+};
 
 // ── 数据备份 ──
 const handleExport = () => {
@@ -124,8 +182,6 @@ const handleImport = () => {
 };
 
 const menuItems = [
-  // { icon: "📤", label: "导出备份", sub: "复制数据到剪贴板", key: "export" },
-  // { icon: "📥", label: "从备份恢复", sub: "从剪贴板导入数据", key: "import" },
   { icon: "📋", label: "关于应用", sub: "版本信息与作者", key: "about" },
 ];
 
@@ -184,32 +240,67 @@ const onMenu = (key: string) => {
         </view>
       </view>
 
-      <!-- 财务快照 -->
-      <view class="snapshot-card">
-        <view class="snapshot-title">财务快照</view>
-        <view class="snapshot-row">
-          <view class="snapshot-item">
-            <view class="snapshot-icon expense-bg">💸</view>
-            <view class="snapshot-info">
-              <text class="snapshot-sub">累计支出</text>
-              <text class="snapshot-amount expense-color"
-                >¥{{ totalExpense.toFixed(2) }}</text
-              >
-            </view>
+      <!-- 财务洞察 -->
+      <view class="insights-grid" v-if="insights">
+        <view class="insight-item insight-daily">
+          <text class="insight-label">本月日均</text>
+          <view class="insight-value-row">
+            <text class="insight-symbol">¥</text>
+            <text class="insight-value">{{ insights.dailyAverage.toFixed(0) }}</text>
           </view>
-          <view class="snapshot-item">
-            <view class="snapshot-icon income-bg">💰</view>
-            <view class="snapshot-info">
-              <text class="snapshot-sub">累计收入</text>
-              <text class="snapshot-amount income-color"
-                >¥{{ totalIncome.toFixed(2) }}</text
-              >
-            </view>
-          </view>
+          <text class="insight-hint">消费节奏</text>
         </view>
-        <view v-if="topCategory" class="snapshot-tip">
-          <text class="tip-emoji">🔥</text>
-          <text class="tip-text">你最常记录的消费是「{{ topCategory }}」</text>
+        <view class="insight-item insight-max">
+          <text class="insight-label">本月最高</text>
+          <view class="insight-value-row">
+            <text class="insight-symbol">¥</text>
+            <text class="insight-value">{{ insights.maxBill?.amount.toFixed(0) }}</text>
+          </view>
+          <text class="insight-hint">{{ insights.maxBill?.category }}支出</text>
+        </view>
+        <view class="insight-item insight-saving">
+          <text class="insight-label">本月最省</text>
+          <view class="insight-value-row">
+            <text class="insight-symbol">¥</text>
+            <text class="insight-value">{{ insights.mostSavingDay?.amount.toFixed(0) }}</text>
+          </view>
+          <text class="insight-hint">{{ insights.mostSavingDay?.date.slice(8) }}日</text>
+        </view>
+      </view>
+
+      <!-- 家庭支出排行 -->
+      <view class="section-card person-compare-card" v-if="personStats.length > 0">
+        <view class="section-title">家庭支出排行</view>
+        <view class="person-ranking-board">
+          <view
+            v-for="(item, index) in personStats.slice(0, 3)"
+            :key="item.name"
+            class="ranking-row clickable"
+            @click="openPersonDetail(item.name)"
+          >
+            <view class="ranking-num">
+              <text :class="['num-text', index < 3 ? 'num-top' : '']">{{ index + 1 }}</text>
+            </view>
+            <view class="ranking-avatar-box">
+              <text class="ranking-avatar">{{ item.avatar }}</text>
+            </view>
+            <view class="ranking-main">
+              <view class="ranking-info-top">
+                <text class="ranking-name">{{ item.name }}</text>
+                <text class="ranking-amount">¥{{ item.amount.toFixed(0) }}</text>
+              </view>
+              <view class="ranking-bar-bg">
+                <view 
+                  class="ranking-bar-fill" 
+                  :style="{ 
+                    width: item.percent + '%',
+                    background: index === 0 ? 'var(--theme-fab-gradient)' : 'var(--theme-primary)'
+                  }"
+                ></view>
+              </view>
+            </view>
+            <text class="menu-arrow">›</text>
+          </view>
         </view>
       </view>
 
@@ -280,6 +371,11 @@ const onMenu = (key: string) => {
           <view class="author-row">
             <text class="author-key">邮箱</text>
             <text class="author-val">2369118064@qq.com</text>
+          </view>
+          <view class="author-divider"></view>
+          <view class="author-row">
+            <text class="author-key">邮箱</text>
+            <text class="author-val">guzhaoheng@anthropic.com</text>
           </view>
           <view class="author-divider"></view>
           <view class="author-row">
@@ -427,8 +523,67 @@ page {
   color: var(--theme-expense);
 }
 
+/* 财务洞察网格 */
+.insights-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+  margin: 0 24rpx 24rpx;
+}
+
+.insight-item {
+  background: rgba(255, 255, 255, 0.88);
+  padding: 24rpx 16rpx;
+  border-radius: 28rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1rpx solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8rpx 24rpx rgba(110, 123, 144, 0.08);
+}
+
+.insight-label {
+  font-size: 20rpx;
+  color: var(--theme-text-muted);
+  font-weight: 500;
+  margin-bottom: 8rpx;
+}
+
+.insight-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2rpx;
+  margin-bottom: 4rpx;
+}
+
+.insight-symbol {
+  font-size: 18rpx;
+  color: var(--theme-text);
+  font-weight: 600;
+}
+
+.insight-value {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: var(--theme-text);
+}
+
+.insight-hint {
+  font-size: 18rpx;
+  color: var(--theme-primary-strong);
+  background: var(--theme-primary-soft);
+  padding: 2rpx 10rpx;
+  border-radius: 999rpx;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.insight-max .insight-hint {
+  color: var(--theme-expense);
+  background: var(--theme-expense-soft);
+}
+
 /* 卡片通用 */
-.snapshot-card,
 .section-card {
   position: relative;
   z-index: 1;
@@ -441,8 +596,6 @@ page {
   backdrop-filter: blur(12rpx);
 }
 
-/* 财务快照 */
-.snapshot-title,
 .section-title {
   font-size: 28rpx;
   font-weight: 700;
@@ -450,119 +603,88 @@ page {
   margin-bottom: 20rpx;
 }
 
-.snapshot-row {
+/* 人员排行看板 */
+.person-ranking-board {
   display: flex;
+  flex-direction: column;
+  gap: 30rpx;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
   gap: 16rpx;
 }
 
-.snapshot-item {
-  flex: 1;
+.ranking-num {
+  width: 32rpx;
   display: flex;
-  align-items: center;
-  gap: 14rpx;
-  padding: 18rpx;
-  border-radius: 20rpx;
-  background: rgba(248, 249, 252, 0.8);
+  justify-content: center;
 }
 
-.snapshot-icon {
-  width: 72rpx;
-  height: 72rpx;
+.num-text {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: var(--theme-text-muted);
+  opacity: 0.5;
+}
+
+.num-top {
+  color: var(--theme-primary);
+  opacity: 1;
+}
+
+.ranking-avatar-box {
+  width: 60rpx;
+  height: 60rpx;
   border-radius: 50%;
+  background: var(--theme-primary-soft);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 34rpx;
-  flex-shrink: 0;
 }
 
-.expense-bg {
-  background: var(--theme-expense-soft);
-}
-.income-bg {
-  background: var(--theme-income-soft);
+.ranking-avatar {
+  font-size: 30rpx;
 }
 
-.snapshot-info {
+.ranking-main {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
-  min-width: 0;
+  gap: 6rpx;
 }
 
-.snapshot-sub {
-  font-size: 22rpx;
+.ranking-info-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ranking-name {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: var(--theme-text);
+}
+
+.ranking-amount {
+  font-size: 24rpx;
+  font-weight: 700;
   color: var(--theme-text-muted);
 }
 
-.snapshot-amount {
-  font-size: 28rpx;
-  font-weight: 800;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.snapshot-tip {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  margin-top: 18rpx;
-  padding: 14rpx 18rpx;
-  border-radius: 16rpx;
-  background: var(--theme-primary-soft);
-}
-
-.tip-emoji {
-  font-size: 28rpx;
-}
-
-.tip-text {
-  font-size: 24rpx;
-  color: var(--theme-primary-strong);
-  font-weight: 500;
-}
-
-/* 主题切换 */
-.theme-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
-}
-
-.theme-chip {
-  display: flex;
-  align-items: center;
-  gap: 10rpx;
-  padding: 12rpx 20rpx;
+.ranking-bar-bg {
+  height: 10rpx;
+  background: rgba(0, 0, 0, 0.04);
   border-radius: 999rpx;
-  background: rgba(240, 242, 246, 0.8);
-  border: 2rpx solid transparent;
-  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
-.theme-chip-active {
-  background: var(--theme-primary-soft);
-  border-color: var(--theme-primary);
-}
-
-.chip-dot {
-  width: 20rpx;
-  height: 20rpx;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.chip-label {
-  font-size: 26rpx;
-  color: var(--theme-text);
-  font-weight: 500;
-}
-
-.chip-check {
-  font-size: 22rpx;
-  color: var(--theme-primary);
-  font-weight: 800;
+.ranking-bar-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* 功能菜单 */

@@ -1,6 +1,8 @@
-# 蜉蝣简账
+# 蜉蝣简账 / FuYou Simple Ledger
 
-> 轻记录，慢生活
+> 轻记录，慢生活 · Light records, slow life.
+
+中文 | [English](README.en.md)
 
 一款基于 `uni-app + Vue 3 + TypeScript` 的极简微信小程序记账工具，专注快速录入、清晰统计与本地隐私优先。
 
